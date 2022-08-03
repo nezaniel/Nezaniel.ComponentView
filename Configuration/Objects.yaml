@@ -1,0 +1,9 @@
+Nezaniel\ComponentView\Application\ComponentCache:
+  arguments:
+    1:
+      object:
+        factoryObjectName: Neos\Flow\Cache\CacheManager
+        factoryMethodName: getCache
+        arguments:
+          1:
+            value: Nezaniel_ComponentView_Components

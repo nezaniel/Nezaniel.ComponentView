@@ -1,0 +1,3 @@
+-
+  requestFilter: 'isPackage("Neos.Neos") && isController("Frontend\Node") && (isAction("show") || isAction("preview")) && isFormat("html")'
+  viewObjectName: 'Nezaniel\ComponentView\Domain\ComponentView'
