@@ -10,7 +10,6 @@ namespace Nezaniel\ComponentView\Tests\Unit\Fixtures;
 
 use Nezaniel\ComponentView\Domain\ComponentCollection;
 use Nezaniel\ComponentView\Domain\ComponentInterface;
-use Nezaniel\ComponentView\Domain\QualifiedComponentSerialization;
 use Psr\Http\Message\UriInterface;
 
 final class MyComponent implements ComponentInterface
@@ -37,30 +36,6 @@ final class MyComponent implements ComponentInterface
     public function render(): string
     {
         return '';
-    }
-
-    /**
-     * @return array<string,mixed>
-     */
-    public function jsonSerialize(): array
-    {
-        return [
-            'string' => $this->string,
-            'int' => $this->int,
-            'float' => $this->float,
-            'bool' => $this->bool,
-            'uri' => (string)$this->uri,
-            'enum' => $this->enum->value,
-            'content' => $this->content,
-            'mySubComponents' => $this->mySubComponents,
-            'myProplessSubComponent' => $this->myProplessSubComponent,
-            'whatever' => QualifiedComponentSerialization::create($this->whatever),
-            'whateverOrNothing' => QualifiedComponentSerialization::create($this->whateverOrNothing),
-            'whateverOrString' => QualifiedComponentSerialization::create($this->whateverOrString),
-            'anotherWhateverOrString' => QualifiedComponentSerialization::create($this->anotherWhateverOrString),
-            'surpriseCollection' => QualifiedComponentSerialization::create($this->surpriseCollection),
-            'plannedCollection' => $this->plannedCollection
-        ];
     }
 
     public function __toString(): string

@@ -77,7 +77,7 @@ final class ContentRenderer extends AbstractComponentPresentationObjectFactory
                 CacheTag::forNode($contentCollection, $workspaceName)
             );
             $content = new ComponentCollection(... array_map(
-                function (Node $childNode) use($subgraph, $inBackend, &$cacheTags): ComponentInterface {
+                function (Node $childNode) use ($subgraph, $inBackend, &$cacheTags): ComponentInterface {
                     return $this->delegate($childNode, $subgraph, $inBackend, $cacheTags);
                 },
                 $contentCollection->findChildNodes()->toArray()

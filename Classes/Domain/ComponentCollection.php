@@ -40,16 +40,4 @@ final class ComponentCollection implements ComponentInterface, ComponentContaine
     {
         return $this->render();
     }
-
-    /**
-     * @return array<int|QualifiedComponentSerialization>
-     */
-    public function jsonSerialize(): array
-    {
-        return array_map(
-            fn (ComponentInterface|string $component): QualifiedComponentSerialization
-                => QualifiedComponentSerialization::create($component),
-            $this->components
-        );
-    }
 }

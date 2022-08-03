@@ -57,7 +57,7 @@ class ComponentSerializer
                     ];
                 } else {
                     $serializedPropertyValue = [
-                        '__type' => gettype($propertyValue),
+                        '__type' => get_debug_type($propertyValue),
                         'value' => $propertyValue
                     ];
                 }
@@ -76,12 +76,15 @@ class ComponentSerializer
         ComponentCollection $componentCollection,
         \ReflectionClass $reflectionClass
     ): array {
+        /** @var array<int,string|ComponentInterface> $components */
+        $components = $reflectionClass->getProperties()[0]->getValue($componentCollection);
+
         return [
             '__class' => get_class($componentCollection),
             'components' => array_map(
                 fn (ComponentInterface|string $childComponent): array|string
                     => is_string($childComponent) ? $childComponent : self::serializeComponent($childComponent),
-                $reflectionClass->getProperties()[0]->getValue($componentCollection)
+                $components
             )
         ];
     }
@@ -93,11 +96,14 @@ class ComponentSerializer
         ComponentInterface $componentCollection,
         \ReflectionClass $reflectionClass
     ): array {
+        /** @var array<int,ComponentInterface> $components */
+        $components = $reflectionClass->getProperties()[0]->getValue($componentCollection);
+
         return [
             '__class' => get_class($componentCollection),
             $reflectionClass->getProperties()[0]->getName() => array_map(
                 fn(ComponentInterface $childComponent): array => self::serializeComponent($childComponent),
-                $reflectionClass->getProperties()[0]->getValue($componentCollection)
+                $components
             )
         ];
     }

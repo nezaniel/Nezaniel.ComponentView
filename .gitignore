@@ -1,2 +1,4 @@
 /.ddev/
 /.idea/
+/Packages/
+/vendor/

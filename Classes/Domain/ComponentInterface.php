@@ -11,14 +11,7 @@ namespace Nezaniel\ComponentView\Domain;
 /**
  * The interface for self-rendering components
  */
-interface ComponentInterface extends \Stringable, \JsonSerializable
+interface ComponentInterface extends \Stringable
 {
     public function render(): string;
-
-    /**
-     * Serializes the component to cache
-     *
-     * @return array<string,string|ComponentInterface|null>
-     */
-    public function jsonSerialize(): array;
 }

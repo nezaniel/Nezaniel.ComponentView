@@ -12,7 +12,6 @@ use GuzzleHttp\Psr7\Uri;
 use Neos\Cache\Backend\FileBackend;
 use Neos\Cache\EnvironmentConfiguration;
 use Neos\Cache\Frontend\StringFrontend;
-use Neos\Flow\Tests\UnitTestCase;
 use Neos\Neos\Domain\Service\ContentContext;
 use Nezaniel\ComponentView\Application\ComponentCache;
 use Nezaniel\ComponentView\Infrastructure\ComponentSerializer;
@@ -24,11 +23,12 @@ use Nezaniel\ComponentView\Tests\Unit\Fixtures\MySubComponent;
 use Nezaniel\ComponentView\Tests\Unit\Fixtures\MySubComponents;
 use Nezaniel\ComponentView\Domain\ComponentCollection;
 use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Test for the UriService
  */
-final class ComponentReconstitutionTest extends UnitTestCase
+final class ComponentReconstitutionTest extends TestCase
 {
     private ?ComponentUnserializer $unserializer = null;
 
@@ -55,7 +55,7 @@ final class ComponentReconstitutionTest extends UnitTestCase
                 new FileBackend(
                     new EnvironmentConfiguration(
                         'wat',
-                        FLOW_PATH_DATA . 'Temporary/Cache'
+                        'Data/Temporary/Cache'
                     )
                 )
             )

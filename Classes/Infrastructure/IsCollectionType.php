@@ -19,8 +19,15 @@ final class IsCollectionType
     public static function isSatisfiedByReflectionClass(\ReflectionClass $reflectionClass): bool
     {
         $reflectionProperties = $reflectionClass->getProperties();
+        if (count($reflectionProperties) !== 1) {
+            return false;
+        }
+        $reflectionPropertyType = $reflectionProperties[0]->getType();
 
-        return count($reflectionProperties) === 1
-            && $reflectionProperties[0]->getType()?->getName() === 'array';
+        if (!$reflectionPropertyType instanceof \ReflectionNamedType) {
+            return false;
+        }
+
+        return $reflectionPropertyType->getName() === 'array';
     }
 }

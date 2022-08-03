@@ -10,7 +10,6 @@ namespace Nezaniel\ComponentView\Tests\Unit\Infrastructure;
 
 use GuzzleHttp\Psr7\Uri;
 use Neos\ContentRepository\Domain\NodeAggregate\NodeAggregateIdentifier;
-use Neos\Flow\Tests\UnitTestCase;
 use Nezaniel\ComponentView\Domain\CacheDirective;
 use Nezaniel\ComponentView\Domain\CacheSegment;
 use Nezaniel\ComponentView\Domain\ComponentCollection;
@@ -24,11 +23,12 @@ use Nezaniel\ComponentView\Tests\Unit\Fixtures\MyProplessSubComponent;
 use Nezaniel\ComponentView\Tests\Unit\Fixtures\MySubComponent;
 use Nezaniel\ComponentView\Tests\Unit\Fixtures\MySubComponents;
 use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Test cases for the component serializer
  */
-final class ComponentSerializerTest extends UnitTestCase
+final class ComponentSerializerTest extends TestCase
 {
     private ?ComponentSerializer $subject = null;
 
@@ -168,15 +168,15 @@ final class ComponentSerializerTest extends UnitTestCase
                         'value' => 'plain text'
                     ],
                     'int' => [
-                        '__type' => 'integer',
+                        '__type' => 'int',
                         'value' => 42
                     ],
                     'float' => [
-                        '__type' => 'double',
+                        '__type' => 'float',
                         'value' => 47.11
                     ],
                     'bool' => [
-                        '__type' => 'boolean',
+                        '__type' => 'bool',
                         'value' => true
                     ],
                     'uri' => [

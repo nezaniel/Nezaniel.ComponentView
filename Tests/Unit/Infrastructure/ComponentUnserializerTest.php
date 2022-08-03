@@ -12,7 +12,6 @@ use GuzzleHttp\Psr7\Uri;
 use Neos\Cache\Backend\FileBackend;
 use Neos\Cache\EnvironmentConfiguration;
 use Neos\Cache\Frontend\StringFrontend;
-use Neos\Flow\Tests\UnitTestCase;
 use Neos\Neos\Domain\Service\ContentContext;
 use Nezaniel\ComponentView\Application\ComponentCache;
 use Nezaniel\ComponentView\Infrastructure\ComponentUnserializer;
@@ -23,11 +22,12 @@ use Nezaniel\ComponentView\Tests\Unit\Fixtures\MySubComponent;
 use Nezaniel\ComponentView\Tests\Unit\Fixtures\MySubComponents;
 use Nezaniel\ComponentView\Domain\ComponentCollection;
 use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Test for the UriService
  */
-final class ComponentUnserializerTest extends UnitTestCase
+final class ComponentUnserializerTest extends TestCase
 {
     private ?ComponentUnserializer $subject = null;
 
@@ -54,7 +54,7 @@ final class ComponentUnserializerTest extends UnitTestCase
                 new FileBackend(
                     new EnvironmentConfiguration(
                         'wat',
-                        FLOW_PATH_DATA . 'Temporary/Cache'
+                        'Data/Temporary/Cache'
                     )
                 )
             )
@@ -93,52 +93,94 @@ final class ComponentUnserializerTest extends UnitTestCase
             $this->subject->unserializeComponent(
                 [
                     '__class' => MyComponent::class,
-                    'string' => 'myString',
-                    'int' => 42,
-                    'float' => 47.11,
-                    'bool' => true,
-                    'uri' => 'https://neos.io',
-                    'enum' => 'default',
+                    'string' => [
+                        '__type' => 'string',
+                        'value' => 'myString'
+                    ],
+                    'int' => [
+                        '__type' => 'int',
+                        'value' => 42
+                    ],
+                    'float' => [
+                        '__type' => 'float',
+                        'value' => 47.11
+                    ],
+                    'bool' => [
+                        '__type' => 'bool',
+                        'value' => true
+                    ],
+                    'uri' => [
+                        '__class' => Uri::class,
+                        'value' => 'https://neos.io'
+                    ],
+                    'enum' => [
+                        '__class' => MyEnum::class,
+                        'value' => 'default'
+                    ],
                     'content' => [
                         '__class' => MySubComponent::class,
-                        'content' => 'text'
+                        'content' => [
+                            '__type' => 'string',
+                            'value' => 'text'
+                        ]
                     ],
                     'mySubComponents' => [
                         '__class' => MySubComponents::class,
                         'subComponents' => [
                             [
                                 '__class' => MySubComponent::class,
-                                'content' => 'text1'
+                                'content' => [
+                                    '__type' => 'string',
+                                    'value' => 'text1'
+                                ]
                             ],
                             [
                                 '__class' => MySubComponent::class,
-                                'content' => 'text2'
+                                'content' => [
+                                    '__type' => 'string',
+                                    'value' => 'text2'
+                                ]
                             ]
                         ]
                     ],
                     'whatever' => [
                         '__class' => MySubComponent::class,
-                        'content' => 'random text'
+                        'content' => [
+                            '__type' => 'string',
+                            'value' => 'random text'
+                        ]
                     ],
                     'whateverOrNothing' => null,
                     'myProplessSubComponent' => [
                         '__class' => MyProplessSubComponent::class,
                     ],
-                    'whateverOrString' => 'whatever',
+                    'whateverOrString' => [
+                        '__type' => 'string',
+                        'value' => 'whatever'
+                    ],
                     'anotherWhateverOrString' => [
                         '__class' => MySubComponent::class,
-                        'content' => 'whatever'
+                        'content' => [
+                            '__type' => 'string',
+                            'value' => 'whatever'
+                        ]
                     ],
                     'surpriseCollection' => [
                         '__class' => ComponentCollection::class,
                         'components' => [
                             [
                                 '__class' => MySubComponent::class,
-                                'content' => 'surprise text 1'
+                                'content' => [
+                                    '__type' => 'string',
+                                    'value' => 'surprise text 1'
+                                ]
                             ],
                             [
                                 '__class' => MySubComponent::class,
-                                'content' => 'surprise text 2'
+                                'content' => [
+                                    '__type' => 'string',
+                                    'value' => 'surprise text 2'
+                                ]
                             ]
                         ]
                     ],
@@ -147,11 +189,17 @@ final class ComponentUnserializerTest extends UnitTestCase
                         'components' => [
                             [
                                 '__class' => MySubComponent::class,
-                                'content' => 'planned text 1'
+                                'content' => [
+                                    '__type' => 'string',
+                                    'value' => 'planned text 1'
+                                ]
                             ],
                             [
                                 '__class' => MySubComponent::class,
-                                'content' => 'planned text 2'
+                                'content' => [
+                                    '__type' => 'string',
+                                    'value' => 'planned text 2'
+                                ]
                             ]
                         ]
                     ]

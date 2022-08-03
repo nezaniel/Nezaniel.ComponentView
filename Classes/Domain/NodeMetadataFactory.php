@@ -26,6 +26,9 @@ final class NodeMetadataFactory extends ContentElementWrappingService
     #[Flow\Inject]
     protected UriService $uriService;
 
+    /**
+     * @return array<string,mixed>
+     */
     public function getAugmenterAttributesForContentNode(NodeInterface $contentNode, ?string $locator = null): ?array
     {
         if (!$this->needsMetadata($contentNode, false)) {
@@ -50,9 +53,12 @@ final class NodeMetadataFactory extends ContentElementWrappingService
             $this->uriService->getControllerContext()
         ));
 
-        return "<script data-neos-nodedata>(function(){(this['@Neos.Neos.Ui:Nodes'] = this['@Neos.Neos.Ui:Nodes'] || {})['".  $contentNode->getContextPath() . "'] = {$metadata}})()</script>";
+        return "<script data-neos-nodedata>(function(){(this['@Neos.Neos.Ui:Nodes'] = this['@Neos.Neos.Ui:Nodes'] || {})['" .  $contentNode->getContextPath() . "'] = {$metadata}})()</script>";
     }
 
+    /**
+     * @return array<string,mixed>
+     */
     public function forDocumentNode(NodeInterface $documentNode, ?string $locator = null): ?array
     {
         if (!$this->needsMetadata($documentNode, true)) {

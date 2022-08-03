@@ -33,13 +33,24 @@ class ComponentUnserializer
     #[Flow\Inject]
     protected ContentRenderer $contentRenderer;
 
+    /** @phpstan-ignore-next-line We can't declare recursive array types */
     public function unserializeComponent(
         array $data,
         ContentContext $subgraph,
         bool $inBackend,
         ComponentCache $cache
-    ): ComponentInterface {
+    ): ?ComponentInterface {
         $className = $data['__class'];
+        if (!is_string($className)) {
+            throw new \InvalidArgumentException('Class identifiers must be strings', 1659564301);
+        }
+        /** @var class-string $className */
+        if (!in_array(ComponentInterface::class, class_implements($className) ?: [])) {
+            throw new \InvalidArgumentException(
+                'Can only unserialize objects of type ' . ComponentInterface::class . ', ' . $className . ' given',
+                1659563886
+            );
+        }
         if ($className === ComponentCollection::class) {
             return $this->unserializeComponentCollection($data, $subgraph, $inBackend, $cache);
         }
@@ -64,32 +75,31 @@ class ComponentUnserializer
                     continue;
                 }
 
-                if (is_string($propertyValue)) {
-                    \Neos\Flow\var_dump($data);
-                    exit();
-                }
-
                 $propertyType = $propertyValue['__class']
                     ?? $propertyValue['__type'];
 
                 /** @var class-string|string|null $propertyType */
-                $properties[$reflectionProperty->name] = match($propertyType) {
+                $properties[$reflectionProperty->name] = match ($propertyType) {
                     null => throw new \InvalidArgumentException(
                         'Cannot unserialize untyped property ' . $reflectionProperty->name,
                         1659214435
                     ),
-                    'string', 'int', 'bool', 'float', 'array' => $propertyValue,
+                    'string', 'int', 'bool', 'float', 'array' => $propertyValue['value'],
                     UriInterface::class, Uri::class => new Uri($propertyValue['value']),
                     default => \enum_exists($propertyType)
-                        ? $propertyType::from($propertyValue)
+                        ? $propertyType::from($propertyValue['value'])
                         : $this->unserializeComponent($propertyValue, $subgraph, $inBackend, $cache)
                 };
             }
         }
 
-        return new $className(...$properties);
+        /** @var ComponentInterface $collection */
+        $collection = new $className(...$properties);
+
+        return $collection;
     }
 
+    /** @phpstan-ignore-next-line We can't declare recursive array types */
     public function unserializeComponentCollection(array $serialization, ContentContext $subgraph, bool $inBackend, ComponentCache $cache): ComponentCollection
     {
         $components = [];
@@ -97,18 +107,22 @@ class ComponentUnserializer
             if (is_string($serializedComponent)) {
                 $components[] = $serializedComponent;
             } else {
-                $components[] = $this->unserializeComponent(
+                $component = $this->unserializeComponent(
                     $serializedComponent,
                     $subgraph,
                     $inBackend,
                     $cache
                 );
+                if ($component instanceof ComponentInterface) {
+                    $components[] = $component;
+                }
             }
         }
 
         return new ComponentCollection(...$components);
     }
 
+    /** @phpstan-ignore-next-line We can't declare recursive array types */
     public function unserializeCollectionType(
         \ReflectionClass $reflectionClass,
         array $data,
@@ -116,54 +130,51 @@ class ComponentUnserializer
         bool $inBackend,
         ComponentCache $cache
     ): ComponentInterface {
+        $className = $reflectionClass->name;
+        if (!in_array(ComponentInterface::class, class_implements($className) ?: [])) {
+            throw new \InvalidArgumentException(
+                'Can only unserialize objects of type ' . ComponentInterface::class
+                    . ', ' . $className . ' given',
+                1659563886
+            );
+        }
         $components = [];
         $collectionPropertyName = $reflectionClass->getProperties()[0]->name;
         foreach ($data[$collectionPropertyName] as $serializedComponent) {
-            $components[] = $this->unserializeComponent(
+            $component = $this->unserializeComponent(
                 $serializedComponent,
                 $subgraph,
                 $inBackend,
                 $cache
             );
-        }
-
-        return new $reflectionClass->name(...$components);
-    }
-
-    private function resolvePropertyType(\ReflectionType $reflectionType, mixed $propertyValue): ?string
-    {
-        if ($reflectionType instanceof \ReflectionUnionType) {
-            $bestMatchedType = null;
-            foreach ($reflectionType->getTypes() as $unionType) {
-                if (
-                    $unionType->getName() === 'string' && is_string($propertyValue)
-                    || $unionType->getName() === 'int' && is_int($propertyValue)
-                    || $unionType->getName() === 'float' && is_float($propertyValue)
-                    || $unionType->getName() === 'bool' && is_bool($propertyValue)
-                    || $unionType->getName() === 'array' && is_array($propertyValue)
-                ) {
-                    if (is_null($bestMatchedType)) $bestMatchedType = $unionType->getName();
-                } elseif (
-                    ($unionType->getName() === UriInterface::class
-                        || $unionType->getName() === Uri::class)
-                    && is_string($propertyValue)
-                ) {
-                    $bestMatchedType = UriInterface::class;
-                }
+            if ($component instanceof ComponentInterface) {
+                $components[] = $component;
             }
-            return $bestMatchedType;
-        } elseif ($reflectionType instanceof \ReflectionNamedType) {
-            return $reflectionType->getName();
-        } else {
-            return null;
         }
+
+        /** @var ComponentInterface $component */
+        $component = new $className(...$components);
+
+        return $component;
     }
 
     /**
-     * @param array<string,mixed> $data
+     * @param array<string,string|null> $data
      */
     public function unserializeCacheDirective(array $data): CacheDirective
     {
+        if (is_null($data['cacheEntryIdentifier'])) {
+            throw new \InvalidArgumentException(
+                'Cannot unserialize cache directives without a cache entry identifier',
+                1659563561
+            );
+        }
+        if (is_null($data['nodeAggregateIdentifier'])) {
+            throw new \InvalidArgumentException(
+                'Cannot unserialize cache directives without a node aggregate identifier',
+                1659563582
+            );
+        }
         return new CacheDirective(
             $data['cacheEntryIdentifier'],
             NodeAggregateIdentifier::fromString($data['nodeAggregateIdentifier']),
@@ -183,7 +194,7 @@ class ComponentUnserializer
                 return null;
             }
             if ($cacheDirective->entryPoint && $cacheDirective->entryPoint->canResolve()) {
-                return (new $cacheDirective->entryPoint->className)->$cacheDirective->entryPoint->methodName($node, $subgraph, $inBackend);
+                return (new $cacheDirective->entryPoint->className())->$cacheDirective->entryPoint->methodName($node, $subgraph, $inBackend);
             }
             if ($cacheDirective->nodeName instanceof NodeName) {
                 return $this->contentRenderer->forContentCollectionChildNode(
@@ -195,11 +206,12 @@ class ComponentUnserializer
             } elseif ($node->getNodeType()->isOfType('Neos.Neos:ContentCollection')) {
                 return $this->contentRenderer->forContentCollection($node, $subgraph, $inBackend);
             }
+            $cacheTags = new CacheTags();
             return $this->contentRenderer->delegate(
                 $node,
                 $subgraph,
                 $inBackend,
-                new CacheTags()
+                $cacheTags
             );
         }
     }

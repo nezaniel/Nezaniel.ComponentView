@@ -46,8 +46,8 @@ class ComponentCacheFlusher
      */
     private array $workspaceGraph;
 
-    public function __construct(
-    ) {
+    public function __construct()
+    {
         $this->cacheTagsToFlush = new CacheTags();
         $this->workspaceGraph = [];
     }
@@ -107,6 +107,7 @@ class ComponentCacheFlusher
     private function handleAssetChange(AssetInterface $asset): void
     {
         $cacheTagsToFlush = [CacheTag::forEverything(null)];
+        /** @var string $assetIdentifier */
         $assetIdentifier = $this->persistenceManager->getIdentifierByObject($asset);
         $cacheTagsToFlush[] = CacheTag::forAsset($assetIdentifier, null);
         foreach ($this->workspaceRepository->findAll() as $workspace) {

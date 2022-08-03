@@ -15,7 +15,7 @@ use Neos\Fusion\Service\HtmlAugmenter;
  * A component for wrapping node metadata around a component
  */
 #[Flow\Proxy(false)]
-final class NodeMetadataWrapper implements ComponentInterface, ComponentContainerInterface
+final class NodeMetadataWrapper implements ComponentInterface
 {
     /**
      * @param array<string,mixed> $attributes
@@ -41,14 +41,6 @@ final class NodeMetadataWrapper implements ComponentInterface, ComponentContaine
         }
 
         return $result;
-    }
-
-    public function jsonSerialize(): array
-    {
-        return [
-            'attributes' => $this->attributes,
-            'content' => QualifiedComponentSerialization::create($this->content)
-        ];
     }
 
     public function isEmpty(): bool
