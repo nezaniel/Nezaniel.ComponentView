@@ -35,7 +35,7 @@ final class CacheDirective
             'cacheEntryIdentifier' => $this->cacheEntryIdentifier,
             'nodeAggregateIdentifier' => (string)$this->nodeAggregateIdentifier,
             'nodeName' => $this->nodeName ? (string)$this->nodeName : null,
-            'entryPoint' => $this->entryPoint->serializeForCache()
+            'entryPoint' => $this->entryPoint?->serializeForCache()
         ];
     }
 }

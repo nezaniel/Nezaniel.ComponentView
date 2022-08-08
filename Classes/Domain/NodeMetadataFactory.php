@@ -12,7 +12,6 @@ use Neos\ContentRepository\Domain\Model\NodeInterface;
 use Neos\Flow\Annotations as Flow;
 use Neos\Neos\Service\ContentElementWrappingService;
 use Neos\Neos\Ui\Fusion\Helper\NodeInfoHelper;
-use PackageFactory\AtomicFusion\PresentationObjects\Infrastructure\UriService;
 
 /**
  * The domain service to create node metadata

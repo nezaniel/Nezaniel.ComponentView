@@ -26,7 +26,7 @@ use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Test for the UriService
+ * Test for ComponentReconstitution
  */
 final class ComponentReconstitutionTest extends TestCase
 {

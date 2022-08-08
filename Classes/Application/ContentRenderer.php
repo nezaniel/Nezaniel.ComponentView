@@ -119,7 +119,7 @@ final class ContentRenderer extends AbstractComponentPresentationObjectFactory
     {
         list($packageKey, $contentName) = explode(':', $contentNode->getNodeTypeName()->getValue());
 
-        $contentComponentFactoryClassName = \str_replace('.', '\\', $packageKey) . '\\Application\\ContentComponentFactory';
+        $contentComponentFactoryClassName = \str_replace('.', '\\', $packageKey) . '\\Integration\\ContentComponentFactory';
         if (!class_exists($contentComponentFactoryClassName)) {
             throw new \InvalidArgumentException('Missing content slot factory in package ' . $packageKey, 1656762670);
         }

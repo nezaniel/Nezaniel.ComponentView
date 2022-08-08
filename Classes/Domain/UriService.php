@@ -8,7 +8,7 @@
 
 declare(strict_types=1);
 
-namespace PackageFactory\AtomicFusion\PresentationObjects\Infrastructure;
+namespace Nezaniel\ComponentView\Domain;
 
 use GuzzleHttp\Psr7\ServerRequest;
 use GuzzleHttp\Psr7\Uri;

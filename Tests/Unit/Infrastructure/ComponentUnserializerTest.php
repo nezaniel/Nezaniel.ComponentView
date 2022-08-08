@@ -25,7 +25,7 @@ use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Test for the UriService
+ * Test for the ComponentUnserializer
  */
 final class ComponentUnserializerTest extends TestCase
 {
