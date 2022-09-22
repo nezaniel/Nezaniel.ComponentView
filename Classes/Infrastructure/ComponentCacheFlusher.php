@@ -109,6 +109,23 @@ class ComponentCacheFlusher
         $this->cache->clear();
     }
 
+    /**
+     * @param array<string,int> $changedFiles
+     */
+    public function whenFilesWereChanged(string $fileMonitorIdentifier, array $changedFiles): void
+    {
+        $fileMonitorsThatTriggerComponentCacheFlush = [
+            'ContentRepository_NodeTypesConfiguration',
+            'Flow_ClassFiles',
+            'Flow_ConfigurationFiles',
+            'Flow_TranslationFiles'
+        ];
+
+        if (in_array($fileMonitorIdentifier, $fileMonitorsThatTriggerComponentCacheFlush)) {
+            $this->cache->clear();
+        }
+    }
+
     private function handleAssetChange(AssetInterface $asset): void
     {
         $cacheTagsToFlush = [CacheTag::forEverything(null)];
