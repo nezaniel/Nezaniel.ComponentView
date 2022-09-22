@@ -30,6 +30,11 @@ final class RenderingEntryPoint
         return new self($className, $methodName);
     }
 
+    public static function fromMethod(string $method): self
+    {
+        return self::fromString(\str_replace('_Original::', '::', $method));
+    }
+
     public function canResolve(): bool
     {
         return class_exists($this->className) && method_exists($this->className, $this->methodName);
