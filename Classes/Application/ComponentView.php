@@ -60,8 +60,7 @@ class ComponentView implements ViewInterface
         $renderingStart = microtime(true);
         $result = $page->render();
         $renderingTime = microtime(true) - $renderingStart;
-        $result .= '<br />Factory: ' . $factoryTime
-            . '<br />Rendering: ' . $renderingTime;
+        $result .= '<!-- Factory: ' . $factoryTime . ', Rendering: ' . $renderingTime . '-->';
 
         return $result;
     }
