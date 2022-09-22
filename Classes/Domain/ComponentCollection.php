@@ -26,6 +26,11 @@ final class ComponentCollection implements ComponentInterface, ComponentContaine
         $this->components = $components;
     }
 
+    public function union(self $other): self
+    {
+        return new self(...array_merge($this->components, $other->components));
+    }
+
     public function isEmpty(): bool
     {
         return empty($this->components);
