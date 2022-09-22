@@ -16,6 +16,7 @@ use Neos\ContentRepository\Domain\Model\NodeInterface;
 use Neos\ContentRepository\Domain\Service\Context as ContentContext;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\Controller\ControllerContext;
+use Neos\Flow\ResourceManagement\PersistentResource;
 use Neos\Flow\ResourceManagement\ResourceManager;
 use Neos\Flow\Http;
 use Neos\Media\Domain\Model\AssetInterface;
@@ -56,6 +57,13 @@ final class UriService
     public function getAssetUri(AssetInterface $asset): Uri
     {
         $uri = $this->resourceManager->getPublicPersistentResourceUri($asset->getResource());
+
+        return new Uri(is_string($uri) ? $uri : '#');
+    }
+
+    public function getPersistentResourceUri(PersistentResource $resource): Uri
+    {
+        $uri = $this->resourceManager->getPublicPersistentResourceUri($resource);
 
         return new Uri(is_string($uri) ? $uri : '#');
     }
