@@ -16,19 +16,15 @@ use Nezaniel\ComponentView\Domain\ComponentInterface;
 use Nezaniel\ComponentView\Domain\CacheDirective;
 use Nezaniel\ComponentView\Domain\CacheSegment;
 use Nezaniel\ComponentView\Domain\ComponentCollection;
-use PackageFactory\AtomicFusion\PresentationObjects\Fusion\AbstractComponentPresentationObjectFactory;
 
 /**
  * The content renderer application service
  */
 #[Flow\Scope("singleton")]
-final class ContentRenderer extends AbstractComponentPresentationObjectFactory
+final class ContentRenderer extends AbstractComponentFactory
 {
     #[Flow\Inject]
     protected NodeMetadataWrapperFactory $nodeMetadataWrapperFactory;
-
-    #[Flow\Inject]
-    protected ComponentCache $componentCache;
 
     public function forContentCollectionChildNode(
         Node $documentNode,
@@ -121,7 +117,11 @@ final class ContentRenderer extends AbstractComponentPresentationObjectFactory
 
         $contentComponentFactoryClassName = \str_replace('.', '\\', $packageKey) . '\\Integration\\ContentComponentFactory';
         if (!class_exists($contentComponentFactoryClassName)) {
-            throw new \InvalidArgumentException('Missing content slot factory in package ' . $packageKey, 1656762670);
+            throw new \InvalidArgumentException(
+                'Missing content component factory in package ' . $packageKey
+                    . ' for node type ' . $contentNode->getNodeTypeName(),
+                1656762670
+            );
         }
         $contentComponentFactory = new $contentComponentFactoryClassName();
         if (!$contentComponentFactory instanceof ContentComponentFactoryInterface) {

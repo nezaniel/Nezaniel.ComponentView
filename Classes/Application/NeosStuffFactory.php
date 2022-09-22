@@ -12,13 +12,12 @@ use Neos\ContentRepository\Domain\Model\Node;
 use Neos\Flow\Annotations as Flow;
 use Neos\Neos\Ui\Domain\Service\ConfigurationRenderingService;
 use Neos\Neos\Ui\Fusion\Helper\StaticResourcesHelper;
-use PackageFactory\AtomicFusion\PresentationObjects\Fusion\AbstractComponentPresentationObjectFactory;
 
 /**
  * The factory to create components necessary for Neos' inline editing
  */
 #[Flow\Scope('singleton')]
-final class NeosStuffFactory extends AbstractComponentPresentationObjectFactory
+final class NeosStuffFactory extends AbstractComponentFactory
 {
     #[Flow\Inject]
     protected ConfigurationRenderingService $configurationRenderingService;
