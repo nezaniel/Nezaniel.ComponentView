@@ -1,15 +1,16 @@
 <?php
 
-declare(strict_types=1);
-
-namespace Nezaniel\ComponentView;
-
 /*
  * This file is part of the Nezaniel.ComponentView package.
  */
 
+declare(strict_types=1);
+
+namespace Nezaniel\ComponentView;
+
 use Neos\Flow\Core\Bootstrap;
 use Neos\Flow\Package\Package as BasePackage;
+use Neos\Flow\SignalSlot\Dispatcher;
 use Neos\Media\Domain\Service\AssetService;
 use Neos\Neos\Domain\Service\SiteImportService;
 use Neos\Neos\Domain\Service\SiteService;
@@ -26,6 +27,11 @@ class Package extends BasePackage
     {
         $dispatcher = $bootstrap->getSignalSlotDispatcher();
 
+        $this->registerCacheSignals($dispatcher);
+    }
+
+    private function registerCacheSignals(Dispatcher $dispatcher): void
+    {
         $dispatcher->connect(Node::class, 'nodeUpdated', ComponentCacheFlusher::class, 'whenNodeWasUpdated', false);
         $dispatcher->connect(Node::class, 'nodeAdded', ComponentCacheFlusher::class, 'whenNodeWasAdded', false);
         $dispatcher->connect(Node::class, 'nodeRemoved', ComponentCacheFlusher::class, 'whenNodeWasRemoved', false);

@@ -89,6 +89,11 @@ class ComponentCacheFlusher
         $this->handleNodeChange($node, $targetWorkspace?->getName());
     }
 
+    public function whenNodeWasDiscarded(Node $node, ?Workspace $targetWorkspace = null): void
+    {
+        $this->handleNodeChange($node, $targetWorkspace?->getName());
+    }
+
     public function whenAssetWasChanged(AssetInterface $asset): void
     {
         $this->handleAssetChange($asset);
