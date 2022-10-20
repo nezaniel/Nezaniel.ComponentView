@@ -26,7 +26,7 @@ final class NodeMetadataWrapperFactory
     ) {
     }
 
-    public function forNode(Node $node, ComponentInterface $content): NodeMetadataWrapper
+    public function forNode(Node $node, ComponentInterface|string $content): NodeMetadataWrapper
     {
         return new NodeMetadataWrapper(
             $this->nodeMetadataFactory->getAugmenterAttributesForContentNode($node),
