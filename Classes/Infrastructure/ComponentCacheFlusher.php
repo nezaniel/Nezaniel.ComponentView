@@ -13,7 +13,6 @@ use Neos\ContentRepository\Domain\Model\NodeType;
 use Neos\ContentRepository\Domain\Model\Workspace;
 use Neos\ContentRepository\Domain\NodeType\NodeTypeName;
 use Neos\ContentRepository\Domain\Repository\WorkspaceRepository;
-use Neos\ContentRepository\Domain\Service\NodeTypeManager;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
 use Neos\Media\Domain\Model\AssetInterface;
@@ -32,9 +31,6 @@ class ComponentCacheFlusher
 
     #[Flow\Inject]
     protected WorkspaceRepository $workspaceRepository;
-
-    #[Flow\Inject]
-    protected NodeTypeManager $nodeTypeManager;
 
     #[Flow\Inject]
     protected PersistenceManagerInterface $persistenceManager;
@@ -180,11 +176,9 @@ class ComponentCacheFlusher
     private function resolveAllSuperTypes(NodeType $nodeType): array
     {
         $superTypes = [];
-        if (!$nodeType->isAbstract()) {
-            $superTypes[$nodeType->getName()] = $nodeType;
-        }
+        $superTypes[$nodeType->getName()] = $nodeType;
 
-        foreach ($this->nodeTypeManager->getSubNodeTypes($nodeType->getName(), true) as $superType) {
+        foreach ($nodeType->getDeclaredSuperTypes() as $superType) {
             $superTypes = array_merge($superTypes, $this->resolveAllSuperTypes($superType));
         }
 
