@@ -21,8 +21,9 @@ final class NodeMetadataWrapper implements ComponentInterface
      * @param array<string,mixed> $attributes
      */
     public function __construct(
-        private ?array $attributes,
-        private ComponentInterface|string $content
+        private readonly ?array $attributes,
+        private readonly ComponentInterface|string $content,
+        private readonly ?string $script
     ) {
     }
 
@@ -37,7 +38,7 @@ final class NodeMetadataWrapper implements ComponentInterface
         if (is_array($this->attributes)) {
             // @todo: replace by own implementation to decouple from Fusion
             $augmenter = new HtmlAugmenter();
-            return $augmenter->addAttributes($result, $this->attributes);
+            return $augmenter->addAttributes($result, $this->attributes) . $this->script;
         }
 
         return $result;

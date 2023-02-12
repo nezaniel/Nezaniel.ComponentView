@@ -30,10 +30,8 @@ final class NodeMetadataWrapperFactory
     {
         return new NodeMetadataWrapper(
             $this->nodeMetadataFactory->getAugmenterAttributesForContentNode($node),
-            new ComponentCollection(
-                $content,
-                $this->nodeMetadataFactory->getScriptForContentNode($node)
-            )
+            $content,
+            $this->nodeMetadataFactory->getScriptForContentNode($node)
         );
     }
 }
