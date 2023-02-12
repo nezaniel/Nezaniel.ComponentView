@@ -78,6 +78,10 @@ final class ContentRenderer extends AbstractComponentFactory
                 },
                 $contentCollection->findChildNodes()->toArray()
             ));
+            if ($content->isEmpty()) {
+                $content = new ComponentCollection('<span></span>');
+            }
+
             $component = $inBackend
                 ? $this->nodeMetadataWrapperFactory->forNode($contentCollection, $content)
                 : $content;
