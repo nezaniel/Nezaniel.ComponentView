@@ -8,18 +8,11 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
-use Neos\ContentRepository\Domain\Model\NodeInterface;
-use Neos\ContentRepository\Domain\NodeAggregate\NodeAggregateIdentifier;
-use Neos\ContentRepository\Domain\NodeType\NodeTypeConstraintFactory;
-use Neos\ContentRepository\Domain\Projection\Content\TraversableNodeInterface;
-use Neos\ContentRepository\Domain\Projection\Content\TraversableNodes;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
+use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
+use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
-use Neos\Neos\Domain\Service\ContentContext;
 use Neos\Neos\Service\ContentElementEditableService;
-use Nezaniel\ComponentView\Domain\CacheDirective;
-use Nezaniel\ComponentView\Domain\CacheSegment;
-use Nezaniel\ComponentView\Domain\ComponentInterface;
-use Nezaniel\ComponentView\Domain\RenderingEntryPoint;
 use Nezaniel\ComponentView\Domain\UriService;
 
 /**
@@ -32,35 +25,16 @@ abstract class AbstractComponentFactory
     protected UriService $uriService;
 
     #[Flow\Inject]
-    protected NodeTypeConstraintFactory $nodeTypeConstraintFactory;
-
-    #[Flow\Inject]
     protected ComponentCache $componentCache;
 
     #[Flow\Inject]
     protected ContentElementEditableService $contentElementEditableService;
 
-    /**
-     * @return UriService
-     */
-    public function getUriService(): UriService
-    {
-        return $this->uriService;
-    }
+    #[Flow\Inject]
+    protected ContentRepositoryRegistry $contentRepositoryRegistry;
 
-    /**
-     * @return TraversableNodes<int,TraversableNodeInterface>
-     */
-    final protected function findChildNodesByNodeTypeFilterString(
-        TraversableNodeInterface $parentNode,
-        string $nodeTypeFilterString
-    ): TraversableNodes {
-        return $parentNode->findChildNodes($this->nodeTypeConstraintFactory->parseFilterString($nodeTypeFilterString));
-    }
-
-    final protected function getEditableProperty(TraversableNodeInterface $node, string $propertyName, bool $block = false): string
+    final protected function getEditableProperty(Node $node, string $propertyName, bool $block = false): string
     {
-        /** @var NodeInterface $node */
         return $this->contentElementEditableService->wrapContentProperty(
             $node,
             $propertyName,
@@ -68,5 +42,19 @@ abstract class AbstractComponentFactory
             . ($node->getProperty($propertyName) ?: '')
             . ($block ? '</div>' : '')
         );
+    }
+
+    final protected function getWorkspaceName(Node $node): WorkspaceName
+    {
+        $workspace = $this->contentRepositoryRegistry->get($node->subgraphIdentity->contentRepositoryId)
+            ->getWorkspaceFinder()
+            ->findOneByCurrentContentStreamId($node->subgraphIdentity->contentStreamId);
+        if (!$workspace) {
+            throw new \InvalidArgumentException(
+                'Cannot resolve workspace for node ' . $node->nodeAggregateId->value,
+                1686433174
+            );
+        }
+        return $workspace->workspaceName;
     }
 }

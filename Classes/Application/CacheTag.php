@@ -8,8 +8,9 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
-use Neos\ContentRepository\Domain\Model\NodeInterface;
-use Neos\ContentRepository\Domain\NodeType\NodeTypeName;
+use Neos\ContentRepository\Core\NodeType\NodeTypeName;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
+use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\Flow\Annotations as Flow;
 
 /**
@@ -26,35 +27,35 @@ class CacheTag
     }
 
     final public static function forEverything(
-        ?string $workspaceName
+        ?WorkspaceName $workspaceName
     ): self {
         return new self('Everything' . self::renderWorkspacePrefix($workspaceName));
     }
 
     final public static function forNode(
-        NodeInterface $node,
-        ?string $workspaceName
+        Node $node,
+        ?WorkspaceName $workspaceName
     ): self {
-        return new self('Node' . self::renderWorkspacePrefix($workspaceName) . '_' . $node->getNodeAggregateIdentifier());
+        return new self('Node' . self::renderWorkspacePrefix($workspaceName) . '_' . $node->nodeAggregateId->value);
     }
 
     final public static function forAncestorNode(
-        NodeInterface $node,
-        ?string $workspaceName
+        Node $node,
+        ?WorkspaceName $workspaceName
     ): self {
-        return new self('Ancestor' . self::renderWorkspacePrefix($workspaceName) . '_' . $node->getNodeAggregateIdentifier());
+        return new self('Ancestor' . self::renderWorkspacePrefix($workspaceName) . '_' . $node->nodeAggregateId->value);
     }
 
     final public static function forNodeTypeName(
         NodeTypeName $nodeTypeName,
-        ?string $workspaceName
+        ?WorkspaceName $workspaceName
     ): self {
-        return new self('NodeType' . self::renderWorkspacePrefix($workspaceName) . '_' . \strtr($nodeTypeName->getValue(), '.:', '_-'));
+        return new self('NodeType' . self::renderWorkspacePrefix($workspaceName) . '_' . \strtr($nodeTypeName->value, '.:', '_-'));
     }
 
     final public static function forAsset(
         string $assetIdentifier,
-        ?string $workspaceName = null
+        ?WorkspaceName $workspaceName = null
     ): self {
         return new self('Asset' . self::renderWorkspacePrefix($workspaceName) . '_' . $assetIdentifier);
     }
@@ -71,8 +72,8 @@ class CacheTag
         return new self($string);
     }
 
-    private static function renderWorkspacePrefix(?string $workspaceName): string
+    private static function renderWorkspacePrefix(?WorkspaceName $workspaceName): string
     {
-        return $workspaceName ? '_%' . $workspaceName . '%' : '';
+        return $workspaceName ? '_%' . $workspaceName->value . '%' : '';
     }
 }

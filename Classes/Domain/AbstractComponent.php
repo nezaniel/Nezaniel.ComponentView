@@ -11,7 +11,7 @@ namespace Nezaniel\ComponentView\Domain;
 /**
  * An abstract component, enforcing string casting by calling render()
  */
-abstract class AbstractComponent implements ComponentInterface
+abstract readonly class AbstractComponent implements ComponentInterface
 {
     final public function __toString(): string
     {

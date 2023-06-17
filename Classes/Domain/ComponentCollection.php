@@ -14,7 +14,7 @@ use Neos\Flow\Annotations as Flow;
  * A collection of self rendering components
  */
 #[Flow\Proxy(false)]
-final class ComponentCollection implements ComponentInterface, ComponentContainerInterface
+final readonly class ComponentCollection extends AbstractComponent implements ComponentContainerInterface
 {
     /**
      * @var array<int,ComponentInterface|string>
@@ -39,10 +39,5 @@ final class ComponentCollection implements ComponentInterface, ComponentContaine
     public function render(): string
     {
         return implode('', $this->components);
-    }
-
-    public function __toString(): string
-    {
-        return $this->render();
     }
 }

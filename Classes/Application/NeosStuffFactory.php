@@ -8,9 +8,10 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
-use Neos\ContentRepository\Domain\Model\Node;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\Flow\Annotations as Flow;
-use Neos\Neos\Ui\Domain\Service\ConfigurationRenderingService;
+use Neos\Neos\Ui\Fusion\Helper\ContentDimensionsHelper;
+use Neos\Neos\Ui\Fusion\Helper\NodeInfoHelper;
 use Neos\Neos\Ui\Fusion\Helper\StaticResourcesHelper;
 
 /**
@@ -20,13 +21,10 @@ use Neos\Neos\Ui\Fusion\Helper\StaticResourcesHelper;
 final class NeosStuffFactory extends AbstractComponentFactory
 {
     #[Flow\Inject]
-    protected ConfigurationRenderingService $configurationRenderingService;
+    protected NodeInfoHelper $nodeInfoHelper;
 
-    /**
-     * @Flow\InjectConfiguration(package="Neos.Neos.Ui.documentNodeInformation")
-     * @var array
-     */
-    protected $settings;
+    #[Flow\Inject]
+    protected ContentDimensionsHelper $contentDimensionsHelper;
 
     public function getHeadStuff(bool $inBackend, Node $documentNode, Node $site): ?string
     {
@@ -34,23 +32,33 @@ final class NeosStuffFactory extends AbstractComponentFactory
             return null;
         }
 
-        $configuration = $this->configurationRenderingService->computeConfiguration(
-            $this->settings,
-            [
-                'documentNode' => $documentNode,
-                'site' => $site,
-                'controllerContext' => $this->uriService->getControllerContext()
+        $configuration = [
+            'metaData' => [
+                'documentNode' => $this->nodeInfoHelper->serializedNodeAddress($documentNode),
+                'siteNode' => $this->nodeInfoHelper->serializedNodeAddress($site),
+                'previewUrl' => $this->nodeInfoHelper->createRedirectToNode($documentNode, $this->uriService->getControllerContext()),
+                'contentDimensions' => [
+                    'active' => $this->contentDimensionsHelper->dimensionSpacePointArray(
+                        $documentNode->subgraphIdentity->dimensionSpacePoint
+                    ),
+                    'allowedPresets' => $this->contentDimensionsHelper->allowedPresetsByName(
+                        $documentNode->subgraphIdentity->dimensionSpacePoint,
+                        $documentNode->subgraphIdentity->contentRepositoryId
+                    ) ?: new \stdClass()
+                ],
+                'documentNodeSerialization' => $this->nodeInfoHelper->renderNodeWithPropertiesAndChildrenInformation(
+                    $documentNode,
+                    $this->uriService->getControllerContext()
+                )
             ]
-        );
+        ];
 
         $compiledResourcePackageKey = (new StaticResourcesHelper())->compiledResourcePackage();
 
         return '
             <script>window[\'@Neos.Neos.Ui:DocumentInformation\']=' . json_encode($configuration) . '</script>
             <script>window.neos = window.parent.neos;</script>
-            <script src="' . $this->uriService->getResourceUri($compiledResourcePackageKey, 'JavaScript/Vendor.js') . '"></script>
-            <script src="' . $this->uriService->getResourceUri($compiledResourcePackageKey, 'JavaScript/Guest.js') . '"></script>
-            <link rel="stylesheet" href="' . $this->uriService->getResourceUri($compiledResourcePackageKey, 'Styles/Host.css') . '">
+            <link rel="stylesheet" href="' . $this->uriService->getResourceUri($compiledResourcePackageKey, 'Build/Host.css') . '">
         ';
     }
 

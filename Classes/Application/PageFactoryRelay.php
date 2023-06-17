@@ -8,9 +8,9 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
-use Neos\ContentRepository\Domain\Model\Node;
+use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\Flow\Mvc\ActionRequest;
-use Neos\Neos\Domain\Service\ContentContext;
 use Nezaniel\ComponentView\Domain\ComponentInterface;
 
 /**
@@ -21,7 +21,7 @@ final class PageFactoryRelay
     public function delegate(
         Node $documentNode,
         Node $site,
-        ContentContext $subgraph,
+        ContentSubgraphInterface $subgraph,
         bool $inBackend,
         ActionRequest $request
     ): ComponentInterface {
@@ -32,7 +32,7 @@ final class PageFactoryRelay
 
     private function resolvePageFactory(Node $documentNode): PageFactoryInterface
     {
-        list($packageKey, $documentName) = explode(':', $documentNode->getNodeTypeName()->getValue());
+        list($packageKey, $documentName) = explode(':', $documentNode->nodeTypeName->value);
 
         $pageFactoryClassName = \str_replace('.', '\\', $packageKey) . '\\Integration\\PageFactory';
         if (!class_exists($pageFactoryClassName)) {

@@ -8,8 +8,8 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
-use Neos\ContentRepository\Domain\Model\Node;
-use Neos\Neos\Domain\Service\ContentContext;
+use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Nezaniel\ComponentView\Domain\ComponentInterface;
 
 /**
@@ -17,5 +17,12 @@ use Nezaniel\ComponentView\Domain\ComponentInterface;
  */
 interface ContentComponentFactoryInterface
 {
-    public function forContentNode(Node $contentNode, ContentContext $subgraph, bool $inBackend, CacheTags &$cacheTags): ComponentInterface;
+    public function forContentNode(
+        Node $contentNode,
+        Node $documentNode,
+        Node $site,
+        ContentSubgraphInterface $subgraph,
+        bool $inBackend,
+        CacheTags &$cacheTags
+    ): ComponentInterface;
 }

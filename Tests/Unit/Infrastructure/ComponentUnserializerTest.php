@@ -12,7 +12,24 @@ use GuzzleHttp\Psr7\Uri;
 use Neos\Cache\Backend\FileBackend;
 use Neos\Cache\EnvironmentConfiguration;
 use Neos\Cache\Frontend\StringFrontend;
-use Neos\Neos\Domain\Service\ContentContext;
+use Neos\ContentRepository\Core\DimensionSpace\DimensionSpacePoint;
+use Neos\ContentRepository\Core\DimensionSpace\OriginDimensionSpacePoint;
+use Neos\ContentRepository\Core\Factory\ContentRepositoryId;
+use Neos\ContentRepository\Core\Feature\NodeModification\Dto\SerializedPropertyValues;
+use Neos\ContentRepository\Core\Infrastructure\Property\PropertyConverter;
+use Neos\ContentRepository\Core\NodeType\DefaultNodeLabelGeneratorFactory;
+use Neos\ContentRepository\Core\NodeType\NodeType;
+use Neos\ContentRepository\Core\NodeType\NodeTypeManager;
+use Neos\ContentRepository\Core\NodeType\NodeTypeName;
+use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphIdentity;
+use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
+use Neos\ContentRepository\Core\Projection\ContentGraph\PropertyCollection;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Timestamps;
+use Neos\ContentRepository\Core\Projection\ContentGraph\VisibilityConstraints;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateClassification;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
+use Neos\ContentRepository\Core\SharedModel\Workspace\ContentStreamId;
 use Nezaniel\ComponentView\Application\ComponentCache;
 use Nezaniel\ComponentView\Infrastructure\ComponentUnserializer;
 use Nezaniel\ComponentView\Tests\Unit\Fixtures\MyComponent;
@@ -21,8 +38,10 @@ use Nezaniel\ComponentView\Tests\Unit\Fixtures\MyProplessSubComponent;
 use Nezaniel\ComponentView\Tests\Unit\Fixtures\MySubComponent;
 use Nezaniel\ComponentView\Tests\Unit\Fixtures\MySubComponents;
 use Nezaniel\ComponentView\Domain\ComponentCollection;
+use Nezaniel\ComponentView\Tests\Unit\Fixtures\TestingSubgraph;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Serializer\Serializer;
 
 /**
  * Test for the ComponentUnserializer
@@ -31,7 +50,9 @@ final class ComponentUnserializerTest extends TestCase
 {
     private ?ComponentUnserializer $subject = null;
 
-    private ?ContentContext $subgraph = null;
+    private ?ContentSubgraphInterface $subgraph = null;
+
+    private ?Node $dummyNode = null;
 
     private ?ComponentCache $cache = null;
 
@@ -39,14 +60,40 @@ final class ComponentUnserializerTest extends TestCase
     {
         parent::setUp();
         $this->subject = new ComponentUnserializer();
-        $this->subgraph = new ContentContext(
-            'live',
-            new \DateTimeImmutable(),
-            [],
-            [],
-            false,
-            false,
-            false
+        $this->subgraph = new TestingSubgraph();
+        $this->dummyNode = new Node(
+            ContentSubgraphIdentity::create(
+                ContentRepositoryId::fromString('default'),
+                ContentStreamId::fromString('cs-id'),
+                DimensionSpacePoint::fromArray([]),
+                VisibilityConstraints::withoutRestrictions()
+            ),
+            NodeAggregateId::fromString('nody-mc-nodeface'),
+            OriginDimensionSpacePoint::fromArray([]),
+            NodeAggregateClassification::CLASSIFICATION_REGULAR,
+            NodeTypeName::fromString('Nezaniel.ComponentView.Testing:Node'),
+            new NodeType(
+                NodeTypeName::fromString('Nezaniel.ComponentView.Testing:Node'),
+                [],
+                [],
+                new NodeTypeManager(
+                    fn (): array => [],
+                    new DefaultNodeLabelGeneratorFactory(),
+                    null
+                ),
+                new DefaultNodeLabelGeneratorFactory()
+            ),
+            new PropertyCollection(
+                SerializedPropertyValues::fromArray([]),
+                new PropertyConverter(new Serializer())
+            ),
+            null,
+            Timestamps::create(
+                new \DateTimeImmutable(),
+                new \DateTimeImmutable(),
+                new \DateTimeImmutable(),
+                new \DateTimeImmutable(),
+            )
         );
         $this->cache = new ComponentCache(
             new StringFrontend(
@@ -205,6 +252,8 @@ final class ComponentUnserializerTest extends TestCase
                     ]
                 ],
                 $this->subgraph,
+                $this->dummyNode,
+                $this->dummyNode,
                 false,
                 $this->cache
             )

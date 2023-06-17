@@ -25,7 +25,7 @@ final class RenderingEntryPointTest extends TestCase
     /**
      * @return array<int,array<int,mixed>>
      */
-    public function methodProvider(): array
+    public static function methodProvider(): array
     {
         return [
             [

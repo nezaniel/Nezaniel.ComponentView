@@ -8,10 +8,10 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Domain;
 
-use Neos\ContentRepository\Domain\Model\NodeInterface;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\Flow\Annotations as Flow;
+use Neos\Neos\FrontendRouting\NodeAddressFactory;
 use Neos\Neos\Service\ContentElementWrappingService;
-use Neos\Neos\Ui\Fusion\Helper\NodeInfoHelper;
 
 /**
  * The domain service to create node metadata
@@ -19,58 +19,50 @@ use Neos\Neos\Ui\Fusion\Helper\NodeInfoHelper;
 #[Flow\Scope('singleton')]
 final class NodeMetadataFactory extends ContentElementWrappingService
 {
-    #[Flow\Inject]
-    protected NodeInfoHelper $nodeInfoHelper;
-
-    #[Flow\Inject]
-    protected UriService $uriService;
-
     /**
-     * @return array<string,mixed>
+     * @return array<string,mixed>|null
      */
-    public function getAugmenterAttributesForContentNode(NodeInterface $contentNode, ?string $locator = null): ?array
+    public function getAugmenterAttributesForContentNode(Node $contentNode, ?string $locator = null): ?array
     {
-        if (!$this->needsMetadata($contentNode, false)) {
-            return null;
-        }
-        $locator = is_string($locator) ? $locator : '/<Neos.Neos:Content>/' . $contentNode->getIdentifier();
+        $contentRepository = $this->contentRepositoryRegistry->get($contentNode->subgraphIdentity->contentRepositoryId);
+        $locator = is_string($locator) ? $locator : '/<Neos.Neos:Content>/' . $contentNode->nodeAggregateId->value;
 
-        $metadata['data-__neos-node-contextpath'] = $contentNode->getContextPath();
-        $metadata['data-__neos-fusion-path'] = $locator;
-        $metadata['tabindex'] = 0;
-        $metadata = $this->addGenericEditingMetadata($metadata, $contentNode);
-        $metadata = $this->addNodePropertyAttributes($metadata, $contentNode);
-        $metadata = $this->addCssClasses($metadata, $contentNode, $this->collectEditingClassNames($contentNode));
+        $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromNode($contentNode);
 
-        return $metadata;
+        $attributes['data-node-__fusion-path'] = $locator;
+        $attributes['data-__neos-node-contextpath'] = $nodeAddress->serializeForUri();
+
+        return $attributes;
     }
 
-    public function getScriptForContentNode(NodeInterface $contentNode): string
+    public function getScriptForContentNode(Node $contentNode): string
     {
-        $metadata = json_encode($this->nodeInfoHelper->renderNodeWithPropertiesAndChildrenInformation(
-            $contentNode,
-            $this->uriService->getControllerContext()
-        ));
+        $contentRepository = $this->contentRepositoryRegistry->get($contentNode->subgraphIdentity->contentRepositoryId);
+        $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromNode($contentNode);
+        $serializedNode = json_encode($this->nodeInfoHelper->renderNode($contentNode));
 
-        return "<script data-neos-nodedata>(function(){(this['@Neos.Neos.Ui:Nodes'] = this['@Neos.Neos.Ui:Nodes'] || {})['" .  $contentNode->getContextPath() . "'] = {$metadata}})()</script>";
+        return "<script data-neos-nodedata>(function(){(this['@Neos.Neos.Ui:Nodes'] = this['@Neos.Neos.Ui:Nodes'] || {})['{$nodeAddress->serializeForUri()}'] = {$serializedNode}})()</script>";
     }
 
     /**
      * @return array<string,mixed>
      */
-    public function forDocumentNode(NodeInterface $documentNode, ?string $locator = null): ?array
+    public function forDocumentNode(Node $documentNode, ?string $locator = null, ?Node $siteNode = null): ?array
     {
-        if (!$this->needsMetadata($documentNode, true)) {
+        $contentRepository = $this->contentRepositoryRegistry->get($documentNode->subgraphIdentity->contentRepositoryId);
+        if (!$this->needsMetadata($documentNode, $contentRepository,  true)) {
             return null;
         }
-        $locator = is_string($locator) ? $locator : '/<Neos.Neos:Document>/' . $documentNode->getIdentifier();
+        $locator = is_string($locator) ? $locator : '/<Neos.Neos:Document>/' . $documentNode->nodeAggregateId->value;
 
-        $metadata['data-__neos-node-contextpath'] = $documentNode->getContextPath();
+        $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromNode($documentNode);
+        \Neos\Flow\var_dump($nodeAddress);
+        $metadata['data-__neos-node-contextpath'] = $nodeAddress->serializeForUri();
         $metadata['data-__neos-fusion-path'] = $locator;
         $metadata = $this->addGenericEditingMetadata($metadata, $documentNode);
         $metadata = $this->addNodePropertyAttributes($metadata, $documentNode);
-        $metadata = $this->addDocumentMetadata($metadata, $documentNode);
-        $metadata = $this->addCssClasses($metadata, $documentNode, []);
+        $metadata = $this->addDocumentMetadata($contentRepository, $metadata, $documentNode, $siteNode);
+        $metadata = $this->addCssClasses($metadata, $documentNode);
 
         return $metadata;
     }

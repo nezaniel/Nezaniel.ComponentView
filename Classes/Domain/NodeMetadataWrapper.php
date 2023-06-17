@@ -8,28 +8,21 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Domain;
 
-use Neos\Flow\Annotations as Flow;
 use Neos\Fusion\Service\HtmlAugmenter;
 
 /**
  * A component for wrapping node metadata around a component
  */
-#[Flow\Proxy(false)]
-final class NodeMetadataWrapper implements ComponentInterface
+final readonly class NodeMetadataWrapper extends AbstractComponent
 {
     /**
      * @param array<string,mixed> $attributes
      */
     public function __construct(
-        private readonly ?array $attributes,
-        private readonly ComponentInterface|string $content,
-        private readonly ?string $script
+        private ?array $attributes,
+        private ComponentInterface|string $content,
+        private ?string $script
     ) {
-    }
-
-    public function __toString(): string
-    {
-        return $this->render();
     }
 
     public function render(): string

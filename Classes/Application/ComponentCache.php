@@ -11,8 +11,9 @@ namespace Nezaniel\ComponentView\Application;
 use Neos\Cache\Exception;
 use Neos\Cache\Frontend\StringFrontend;
 use Neos\Cache\Psr\InvalidArgumentException;
+use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\Flow\Annotations as Flow;
-use Neos\Neos\Domain\Service\ContentContext;
 use Nezaniel\ComponentView\Infrastructure\ComponentSerializer;
 use Nezaniel\ComponentView\Infrastructure\ComponentUnserializer;
 use Nezaniel\ComponentView\Domain\ComponentInterface;
@@ -32,8 +33,14 @@ class ComponentCache implements CacheInterface
     ) {
     }
 
-    public function findComponent(string $identifier, ContentContext $subgraph, bool $inBackend): ?ComponentInterface
-    {
+    public function findComponent(
+        string $identifier,
+        ContentSubgraphInterface $subgraph,
+        Node $documentNode,
+        Node $site,
+        bool $inBackend
+    ): ?ComponentInterface {
+        return null;
         $data = $this->get($identifier);
         if (is_string($data)) {
             $serialization = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
@@ -41,6 +48,8 @@ class ComponentCache implements CacheInterface
             return $this->componentUnserializer->unserializeComponent(
                 $serialization,
                 $subgraph,
+                $documentNode,
+                $site,
                 $inBackend,
                 $this
             );

@@ -8,9 +8,9 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Tests\Unit\Fixtures;
 
-use Nezaniel\ComponentView\Domain\ComponentInterface;
+use Nezaniel\ComponentView\Domain\AbstractComponent;
 
-final class MySubComponent implements ComponentInterface
+final readonly class MySubComponent extends AbstractComponent
 {
     public function __construct(
         private string $content
@@ -20,20 +20,5 @@ final class MySubComponent implements ComponentInterface
     public function render(): string
     {
         return $this->content;
-    }
-
-    /**
-     * @return array<string,mixed>
-     */
-    public function jsonSerialize(): array
-    {
-        return [
-            'content' => $this->content
-        ];
-    }
-
-    public function __toString(): string
-    {
-        return $this->render();
     }
 }

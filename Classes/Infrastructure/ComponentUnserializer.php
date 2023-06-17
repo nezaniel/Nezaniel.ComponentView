@@ -9,11 +9,11 @@ declare(strict_types=1);
 namespace Nezaniel\ComponentView\Infrastructure;
 
 use GuzzleHttp\Psr7\Uri;
-use Neos\ContentRepository\Domain\Model\Node;
-use Neos\ContentRepository\Domain\NodeAggregate\NodeAggregateIdentifier;
-use Neos\ContentRepository\Domain\NodeAggregate\NodeName;
+use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeName;
 use Neos\Flow\Annotations as Flow;
-use Neos\Neos\Domain\Service\ContentContext;
 use Nezaniel\ComponentView\Application\CacheTags;
 use Nezaniel\ComponentView\Application\ComponentCache;
 use Nezaniel\ComponentView\Domain\CacheDirective;
@@ -36,7 +36,9 @@ class ComponentUnserializer
     /** @phpstan-ignore-next-line We can't declare recursive array types */
     public function unserializeComponent(
         array $data,
-        ContentContext $subgraph,
+        ContentSubgraphInterface $subgraph,
+        Node $documentNode,
+        Node $site,
         bool $inBackend,
         ComponentCache $cache
     ): ?ComponentInterface {
@@ -52,12 +54,21 @@ class ComponentUnserializer
             );
         }
         if ($className === ComponentCollection::class) {
-            return $this->unserializeComponentCollection($data, $subgraph, $inBackend, $cache);
+            return $this->unserializeComponentCollection(
+                $data,
+                $subgraph,
+                $documentNode,
+                $site,
+                $inBackend,
+                $cache
+            );
         }
         if ($className === CacheSegment::class) {
             return $this->resolveCacheDirective(
                 $this->unserializeCacheDirective($data['cacheDirective']),
                 $subgraph,
+                $documentNode,
+                $site,
                 $inBackend,
                 $cache
             );
@@ -65,7 +76,15 @@ class ComponentUnserializer
         $properties = [];
         $reflectionClass = new \ReflectionClass($className);
         if (IsCollectionType::isSatisfiedByReflectionClass($reflectionClass)) {
-            return $this->unserializeCollectionType($reflectionClass, $data, $subgraph, $inBackend, $cache);
+            return $this->unserializeCollectionType(
+                $reflectionClass,
+                $data,
+                $subgraph,
+                $documentNode,
+                $site,
+                $inBackend,
+                $cache
+            );
         } else {
             foreach ($reflectionClass->getProperties() as $reflectionProperty) {
                 $propertyValue = $data[$reflectionProperty->name];
@@ -88,7 +107,14 @@ class ComponentUnserializer
                     UriInterface::class, Uri::class => new Uri($propertyValue['value']),
                     default => \enum_exists($propertyType)
                         ? $propertyType::from($propertyValue['value'])
-                        : $this->unserializeComponent($propertyValue, $subgraph, $inBackend, $cache)
+                        : $this->unserializeComponent(
+                            $propertyValue,
+                            $subgraph,
+                            $documentNode,
+                            $site,
+                            $inBackend,
+                            $cache
+                        )
                 };
             }
         }
@@ -100,7 +126,14 @@ class ComponentUnserializer
     }
 
     /** @phpstan-ignore-next-line We can't declare recursive array types */
-    public function unserializeComponentCollection(array $serialization, ContentContext $subgraph, bool $inBackend, ComponentCache $cache): ComponentCollection
+    public function unserializeComponentCollection(
+        array $serialization,
+        ContentSubgraphInterface $subgraph,
+        Node $documentNode,
+        Node $site,
+        bool $inBackend,
+        ComponentCache $cache
+    ): ComponentCollection
     {
         $components = [];
         foreach ($serialization['components'] as $serializedComponent) {
@@ -110,6 +143,8 @@ class ComponentUnserializer
                 $component = $this->unserializeComponent(
                     $serializedComponent,
                     $subgraph,
+                    $documentNode,
+                    $site,
                     $inBackend,
                     $cache
                 );
@@ -126,7 +161,9 @@ class ComponentUnserializer
     public function unserializeCollectionType(
         \ReflectionClass $reflectionClass,
         array $data,
-        ContentContext $subgraph,
+        ContentSubgraphInterface $subgraph,
+        Node $documentNode,
+        Node $site,
         bool $inBackend,
         ComponentCache $cache
     ): ComponentInterface {
@@ -144,6 +181,8 @@ class ComponentUnserializer
             $component = $this->unserializeComponent(
                 $serializedComponent,
                 $subgraph,
+                $documentNode,
+                $site,
                 $inBackend,
                 $cache
             );
@@ -163,33 +202,40 @@ class ComponentUnserializer
      */
     public function unserializeCacheDirective(array $data): CacheDirective
     {
-        if (is_null($data['cacheEntryIdentifier'])) {
+        if (is_null($data['cacheEntryId'])) {
             throw new \InvalidArgumentException(
                 'Cannot unserialize cache directives without a cache entry identifier',
                 1659563561
             );
         }
-        if (is_null($data['nodeAggregateIdentifier'])) {
+        if (is_null($data['nodeAggregateId'])) {
             throw new \InvalidArgumentException(
                 'Cannot unserialize cache directives without a node aggregate identifier',
                 1659563582
             );
         }
         return new CacheDirective(
-            $data['cacheEntryIdentifier'],
-            NodeAggregateIdentifier::fromString($data['nodeAggregateIdentifier']),
+            $data['cacheEntryId'],
+            NodeAggregateId::fromString($data['nodeAggregateId']),
             $data['nodeName'] ? NodeName::fromString($data['nodeName']) : null,
             $data['entryPoint'] ? RenderingEntryPoint::fromString($data['entryPoint']) : null
         );
     }
 
-    private function resolveCacheDirective(CacheDirective $cacheDirective, ContentContext $subgraph, bool $inBackend, ComponentCache $cache): ?ComponentInterface
+    private function resolveCacheDirective(
+        CacheDirective $cacheDirective,
+        ContentSubgraphInterface $subgraph,
+        Node $documentNode,
+        Node $site,
+        bool $inBackend,
+        ComponentCache $cache
+    ): ?ComponentInterface
     {
-        $cachedComponent = $cache->findComponent($cacheDirective->cacheEntryIdentifier, $subgraph, $inBackend);
+        $cachedComponent = $cache->findComponent($cacheDirective->cacheEntryId, $subgraph, $inBackend);
         if ($cachedComponent instanceof ComponentInterface) {
             return $cachedComponent;
         } else {
-            $node = $subgraph->getNodeByIdentifier((string)$cacheDirective->nodeAggregateIdentifier);
+            $node = $subgraph->findNodeById($cacheDirective->nodeAggregateId);
             if (!$node instanceof Node) {
                 return null;
             }
@@ -199,16 +245,20 @@ class ComponentUnserializer
             if ($cacheDirective->nodeName instanceof NodeName) {
                 return $this->contentRenderer->forContentCollectionChildNode(
                     $node,
+                    $site,
                     $cacheDirective->nodeName,
                     $subgraph,
                     $inBackend
                 );
-            } elseif ($node->getNodeType()->isOfType('Neos.Neos:ContentCollection')) {
-                return $this->contentRenderer->forContentCollection($node, $subgraph, $inBackend);
+            } elseif ($node->nodeType->isOfType('Neos.Neos:ContentCollection')) {
+                return $this->contentRenderer->forContentCollection($node, $documentNode, $site, $subgraph, $inBackend);
             }
             $cacheTags = new CacheTags();
+
             return $this->contentRenderer->delegate(
                 $node,
+                $documentNode,
+                $site,
                 $subgraph,
                 $inBackend,
                 $cacheTags

@@ -15,7 +15,7 @@ use Neos\Media\Domain\Service\AssetService;
 use Neos\Neos\Domain\Service\SiteImportService;
 use Neos\Neos\Domain\Service\SiteService;
 use Neos\Neos\Service\PublishingService;
-use Neos\ContentRepository\Domain\Model\Node;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Nezaniel\ComponentView\Infrastructure\ComponentCacheFlusher;
 
 /**

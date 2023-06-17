@@ -8,11 +8,11 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Infrastructure;
 
-use Neos\ContentRepository\Domain\Model\Node;
-use Neos\ContentRepository\Domain\Model\NodeType;
+use Neos\ContentRepository\Core\NodeType\NodeTypeName;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\ContentRepository\Domain\Model\Workspace;
-use Neos\ContentRepository\Domain\NodeType\NodeTypeName;
 use Neos\ContentRepository\Domain\Repository\WorkspaceRepository;
+use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
 use Neos\Media\Domain\Model\AssetInterface;
@@ -30,7 +30,7 @@ class ComponentCacheFlusher
     protected ComponentCache $cache;
 
     #[Flow\Inject]
-    protected WorkspaceRepository $workspaceRepository;
+    protected ContentRepositoryRegistry $contentRepositoryRegistry;
 
     #[Flow\Inject]
     protected PersistenceManagerInterface $persistenceManager;
@@ -38,7 +38,8 @@ class ComponentCacheFlusher
     private CacheTags $cacheTagsToFlush;
 
     /**
-     * @var array<string,string>
+     * The workspace graph collection, indexed by content repository ID
+     * @var array<string,array<string,string>>
      */
     private array $workspaceGraph;
 

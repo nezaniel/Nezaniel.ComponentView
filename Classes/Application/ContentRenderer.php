@@ -8,10 +8,11 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
-use Neos\ContentRepository\Domain\Model\Node;
-use Neos\ContentRepository\Domain\NodeAggregate\NodeName;
+use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindChildNodesFilter;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeName;
 use Neos\Flow\Annotations as Flow;
-use Neos\Neos\Domain\Service\ContentContext;
 use Nezaniel\ComponentView\Domain\ComponentInterface;
 use Nezaniel\ComponentView\Domain\CacheDirective;
 use Nezaniel\ComponentView\Domain\CacheSegment;
@@ -23,17 +24,22 @@ use Nezaniel\ComponentView\Domain\ComponentCollection;
 #[Flow\Scope("singleton")]
 final class ContentRenderer extends AbstractComponentFactory
 {
-    #[Flow\Inject]
-    protected NodeMetadataWrapperFactory $nodeMetadataWrapperFactory;
+    public function __construct(
+        private readonly NodeMetadataWrapperFactory $nodeMetadataWrapperFactory
+    ) {
+    }
 
     public function forContentCollectionChildNode(
         Node $documentNode,
+        Node $site,
         NodeName $collectionName,
-        ContentContext $subgraph,
+        ContentSubgraphInterface $subgraph,
         bool $inBackend
     ): CacheSegment {
         return $this->resolveCacheSegmentForContentCollection(
             $documentNode,
+            $documentNode,
+            $site,
             $collectionName,
             $subgraph,
             $inBackend
@@ -42,11 +48,15 @@ final class ContentRenderer extends AbstractComponentFactory
 
     public function forContentCollection(
         Node $contentCollection,
-        ContentContext $subgraph,
+        Node $documentNode,
+        Node $site,
+        ContentSubgraphInterface $subgraph,
         bool $inBackend
     ): CacheSegment {
         return $this->resolveCacheSegmentForContentCollection(
             $contentCollection,
+            $documentNode,
+            $site,
             null,
             $subgraph,
             $inBackend
@@ -55,28 +65,44 @@ final class ContentRenderer extends AbstractComponentFactory
 
     private function resolveCacheSegmentForContentCollection(
         Node $node,
+        Node $documentNode,
+        Node $site,
         ?NodeName $collectionName,
-        ContentContext $subgraph,
+        ContentSubgraphInterface $subgraph,
         bool $inBackend
     ): CacheSegment {
-        $workspaceName = $node->getContext()->getWorkspace()->getName();
-        $cacheEntryIdentifier = 'node_' . $node->getNodeAggregateIdentifier()
-            . '_' . $workspaceName . '_' . $inBackend . ($collectionName ? '_' . $collectionName : '');
+        $workspaceName = $this->getWorkspaceName($node);
+        $cacheEntryIdentifier = 'node_' . $node->nodeAggregateId->value
+            . '_' . $workspaceName->value . '_' . $inBackend . ($collectionName ? '_' . $collectionName->value : '');
 
-        $component = $this->componentCache->findComponent($cacheEntryIdentifier, $subgraph, $inBackend);
+        $component = $this->componentCache->findComponent(
+            $cacheEntryIdentifier,
+            $subgraph,
+            $documentNode,
+            $site,
+            $inBackend
+        );
 
         if (is_null($component)) {
-            /** @var Node $contentCollection */
-            $contentCollection = $collectionName ? $node->findNamedChildNode($collectionName) : $node;
+            $contentCollection = $collectionName
+                ? $subgraph->findChildNodeConnectedThroughEdgeName(
+                    $node->nodeAggregateId,
+                    $collectionName
+                ) : $node;
             $cacheTags = new CacheTags(
                 CacheTag::forAncestorNode($contentCollection, $workspaceName),
                 CacheTag::forNode($contentCollection, $workspaceName)
             );
             $content = new ComponentCollection(... array_map(
-                function (Node $childNode) use ($subgraph, $inBackend, &$cacheTags): ComponentInterface {
-                    return $this->delegate($childNode, $subgraph, $inBackend, $cacheTags);
-                },
-                $contentCollection->findChildNodes()->toArray()
+                fn (Node $childNode): ComponentInterface => $this->delegate(
+                    $childNode,
+                    $documentNode,
+                    $site,
+                    $subgraph,
+                    $inBackend,
+                    $cacheTags
+                ),
+                $subgraph->findChildNodes($contentCollection->nodeAggregateId, FindChildNodesFilter::create())->getIterator()->getArrayCopy()
             ));
             if ($content->isEmpty()) {
                 $content = new ComponentCollection('<span></span>');
@@ -97,7 +123,7 @@ final class ContentRenderer extends AbstractComponentFactory
         return new CacheSegment(
             new CacheDirective(
                 $cacheEntryIdentifier,
-                $node->getNodeAggregateIdentifier(),
+                $node->nodeAggregateId,
                 $collectionName,
                 null
             ),
@@ -105,10 +131,23 @@ final class ContentRenderer extends AbstractComponentFactory
         );
     }
 
-    public function delegate(Node $contentNode, ContentContext $subgraph, bool $inBackend, CacheTags &$cacheTags): ComponentInterface
-    {
+    public function delegate(
+        Node $contentNode,
+        Node $documentNode,
+        Node $site,
+        ContentSubgraphInterface $subgraph,
+        bool $inBackend,
+        CacheTags &$cacheTags
+    ): ComponentInterface {
         $contentComponentFactory = $this->resolveContentComponentFactory($contentNode);
-        $component = $contentComponentFactory->forContentNode($contentNode, $subgraph, $inBackend, $cacheTags);
+        $component = $contentComponentFactory->forContentNode(
+            $contentNode,
+            $documentNode,
+            $site,
+            $subgraph,
+            $inBackend,
+            $cacheTags
+        );
 
         return $inBackend
             ? $this->nodeMetadataWrapperFactory->forNode($contentNode, $component)
@@ -117,13 +156,13 @@ final class ContentRenderer extends AbstractComponentFactory
 
     private function resolveContentComponentFactory(Node $contentNode): ContentComponentFactoryInterface
     {
-        list($packageKey, $contentName) = explode(':', $contentNode->getNodeTypeName()->getValue());
+        list($packageKey, $contentName) = explode(':', $contentNode->nodeTypeName->value);
 
         $contentComponentFactoryClassName = \str_replace('.', '\\', $packageKey) . '\\Integration\\ContentComponentFactory';
         if (!class_exists($contentComponentFactoryClassName)) {
             throw new \InvalidArgumentException(
                 'Missing content component factory in package ' . $packageKey
-                    . ' for node type ' . $contentNode->getNodeTypeName(),
+                    . ' for node type ' . $contentNode->nodeTypeName->value,
                 1656762670
             );
         }

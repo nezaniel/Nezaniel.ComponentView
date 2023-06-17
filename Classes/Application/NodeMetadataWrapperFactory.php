@@ -8,9 +8,8 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
-use Neos\ContentRepository\Domain\Model\Node;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\Flow\Annotations as Flow;
-use Nezaniel\ComponentView\Domain\ComponentCollection;
 use Nezaniel\ComponentView\Domain\ComponentInterface;
 use Nezaniel\ComponentView\Domain\NodeMetadataFactory;
 use Nezaniel\ComponentView\Domain\NodeMetadataWrapper;
@@ -19,7 +18,7 @@ use Nezaniel\ComponentView\Domain\NodeMetadataWrapper;
  * The factory application service for creating node metadata wrapper components
  */
 #[Flow\Scope('singleton')]
-final class NodeMetadataWrapperFactory
+final readonly class NodeMetadataWrapperFactory
 {
     public function __construct(
         private NodeMetadataFactory $nodeMetadataFactory
