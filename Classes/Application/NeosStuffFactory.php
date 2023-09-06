@@ -8,7 +8,6 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
-use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\Flow\Annotations as Flow;
 use Neos\Neos\Ui\Fusion\Helper\ContentDimensionsHelper;
 use Neos\Neos\Ui\Fusion\Helper\NodeInfoHelper;
@@ -26,28 +25,28 @@ final class NeosStuffFactory extends AbstractComponentFactory
     #[Flow\Inject]
     protected ContentDimensionsHelper $contentDimensionsHelper;
 
-    public function getHeadStuff(bool $inBackend, Node $documentNode, Node $site): ?string
+    public function getHeadStuff(ComponentViewRuntimeVariables $runtimeVariables): ?string
     {
-        if (!$inBackend) {
+        if (!$runtimeVariables->inBackend) {
             return null;
         }
 
         $configuration = [
             'metaData' => [
-                'documentNode' => $this->nodeInfoHelper->serializedNodeAddress($documentNode),
-                'siteNode' => $this->nodeInfoHelper->serializedNodeAddress($site),
-                'previewUrl' => $this->nodeInfoHelper->createRedirectToNode($documentNode, $this->uriService->getControllerContext()),
+                'documentNode' => $this->nodeInfoHelper->serializedNodeAddress($runtimeVariables->documentNode),
+                'siteNode' => $this->nodeInfoHelper->serializedNodeAddress($runtimeVariables->siteNode),
+                'previewUrl' => $this->nodeInfoHelper->createRedirectToNode($runtimeVariables->documentNode, $this->uriService->getControllerContext()),
                 'contentDimensions' => [
                     'active' => $this->contentDimensionsHelper->dimensionSpacePointArray(
-                        $documentNode->subgraphIdentity->dimensionSpacePoint
+                        $runtimeVariables->documentNode->subgraphIdentity->dimensionSpacePoint
                     ),
                     'allowedPresets' => $this->contentDimensionsHelper->allowedPresetsByName(
-                        $documentNode->subgraphIdentity->dimensionSpacePoint,
-                        $documentNode->subgraphIdentity->contentRepositoryId
+                        $runtimeVariables->documentNode->subgraphIdentity->dimensionSpacePoint,
+                        $runtimeVariables->documentNode->subgraphIdentity->contentRepositoryId
                     ) ?: new \stdClass()
                 ],
                 'documentNodeSerialization' => $this->nodeInfoHelper->renderNodeWithPropertiesAndChildrenInformation(
-                    $documentNode,
+                    $runtimeVariables->documentNode,
                     $this->uriService->getControllerContext()
                 )
             ]

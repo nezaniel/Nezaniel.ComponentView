@@ -8,12 +8,12 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
+use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindAncestorNodesFilter;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\Controller\ControllerContext;
 use Neos\Flow\Mvc\View\AbstractView;
-use Neos\Neos\Domain\Service\SiteNodeUtility;
 use Nezaniel\ComponentView\Domain\UriService;
 
 /**
@@ -21,23 +21,11 @@ use Nezaniel\ComponentView\Domain\UriService;
  */
 class ComponentView extends AbstractView
 {
-    /**
-     * @Flow\Inject
-     * @var ContentRepositoryRegistry
-     */
-    protected $contentRepositoryRegistry;
+    #[Flow\Inject]
+    protected ContentRepositoryRegistry $contentRepositoryRegistry;
 
-    /**
-     * @Flow\Inject
-     * @var SiteNodeUtility
-     */
-    protected $siteNodeUtility;
-
-    /**
-     * @Flow\Inject
-     * @var UriService
-     */
-    protected $uriService;
+    #[Flow\Inject]
+    protected UriService $uriService;
 
     private ?Node $documentNode = null;
 
@@ -78,14 +66,23 @@ class ComponentView extends AbstractView
             default => throw new \InvalidArgumentException('unknown action ' . $this->controllerContext->getRequest()->getControllerActionName())
         };
 
+        $subgraph = $this->contentRepositoryRegistry->subgraphForNode($this->documentNode);
+        $siteNode = $subgraph->findAncestorNodes(
+            $this->documentNode->nodeAggregateId,
+            FindAncestorNodesFilter::create(
+                nodeTypeConstraints: 'Neos.Neos:Site'
+            )
+        )->first();
+        assert($siteNode instanceof Node);
+
         $pageFactoryRelay = new PageFactoryRelay();
-        $page = $pageFactoryRelay->delegate(
+        $page = $pageFactoryRelay->delegate(new ComponentViewRuntimeVariables(
+            $siteNode,
             $this->documentNode,
-            $this->siteNodeUtility->findSiteNode($this->documentNode),
-            $this->contentRepositoryRegistry->subgraphForNode($this->documentNode),
-            $inBackend,
-            $this->controllerContext->getRequest()
-        );
+            $subgraph,
+            $this->controllerContext->getRequest(),
+            $inBackend
+        ));
         $factoryTime = microtime(true) - $factoryStart;
         $renderingStart = microtime(true);
         $result = $page->render();

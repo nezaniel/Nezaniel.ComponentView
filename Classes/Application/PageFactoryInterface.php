@@ -18,11 +18,5 @@ use Nezaniel\ComponentView\Domain\ComponentInterface;
  */
 interface PageFactoryInterface
 {
-    public function forDocumentNode(
-        Node $documentNode,
-        Node $site,
-        ContentSubgraphInterface $subgraph,
-        bool $inBackend,
-        ActionRequest $request
-    ): ComponentInterface;
+    public function forDocumentNode(ComponentViewRuntimeVariables $runtimeVariables): ComponentInterface;
 }
