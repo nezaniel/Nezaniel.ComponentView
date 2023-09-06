@@ -63,7 +63,7 @@ final class UriService
         $nodeAddressFactory = NodeAddressFactory::create($contentRepository);
         $nodeAddress = $nodeAddressFactory->createFromNode($documentNode);
         $uriBuilder = new UriBuilder();
-        $uriBuilder->setRequest($this->controllerContext->getRequest());
+        $uriBuilder->setRequest($this->getControllerContext()->getRequest());
         $uriBuilder
             ->setCreateAbsoluteUri($absolute)
             ->setFormat($format ?: 'html');
