@@ -66,13 +66,17 @@ class ComponentView extends AbstractView
             default => throw new \InvalidArgumentException('unknown action ' . $this->controllerContext->getRequest()->getControllerActionName())
         };
 
+        $contentRepository = $this->contentRepositoryRegistry->get($this->documentNode->subgraphIdentity->contentRepositoryId);
         $subgraph = $this->contentRepositoryRegistry->subgraphForNode($this->documentNode);
-        $siteNode = $subgraph->findAncestorNodes(
-            $this->documentNode->nodeAggregateId,
-            FindAncestorNodesFilter::create(
-                nodeTypeConstraints: 'Neos.Neos:Site'
-            )
-        )->first();
+        $siteNode = $contentRepository->getNodeTypeManager()->getNodeType($this->documentNode->nodeTypeName)
+            ->isOfType('Neos.Neos:Site')
+            ? $this->documentNode
+            : $subgraph->findAncestorNodes(
+                $this->documentNode->nodeAggregateId,
+                FindAncestorNodesFilter::create(
+                    nodeTypeConstraints: 'Neos.Neos:Site'
+                )
+            )->first();
         assert($siteNode instanceof Node);
 
         $pageFactoryRelay = new PageFactoryRelay();
