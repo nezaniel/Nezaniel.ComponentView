@@ -27,4 +27,20 @@ final readonly class ComponentViewRuntimeVariables
         public bool $inBackend
     ) {
     }
+
+    public function with(
+        Node $siteNode = null,
+        Node $documentNode = null,
+        ContentSubgraphInterface $subgraph = null,
+        ActionRequest $request = null,
+        bool $inBackend = null,
+    ): self {
+        return new self(
+            $siteNode ?: $this->siteNode,
+            $documentNode ?: $this->documentNode,
+            $subgraph ?: $this->subgraph,
+            $request ?: $this->request,
+            !is_null($inBackend) ? $inBackend : $this->inBackend,
+        );
+    }
 }
