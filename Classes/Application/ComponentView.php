@@ -68,6 +68,11 @@ class ComponentView extends AbstractView
 
         $contentRepository = $this->contentRepositoryRegistry->get($this->documentNode->subgraphIdentity->contentRepositoryId);
         $subgraph = $this->contentRepositoryRegistry->subgraphForNode($this->documentNode);
+        $siteNode = $this->documentNode;
+        while ($siteNode && !$siteNode->nodeType->isOfType('Neos.Neos:Site')) {
+            $siteNode = $subgraph->findParentNode($siteNode->nodeAggregateId);
+        }
+        /*
         $siteNode = $contentRepository->getNodeTypeManager()->getNodeType($this->documentNode->nodeTypeName)
             ->isOfType('Neos.Neos:Site')
             ? $this->documentNode
@@ -76,7 +81,7 @@ class ComponentView extends AbstractView
                 FindAncestorNodesFilter::create(
                     nodeTypeConstraints: 'Neos.Neos:Site'
                 )
-            )->first();
+            )->first();*/
         assert($siteNode instanceof Node);
 
         $pageFactoryRelay = new PageFactoryRelay();
