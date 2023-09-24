@@ -10,8 +10,6 @@ namespace Nezaniel\ComponentView\Infrastructure;
 
 use Neos\ContentRepository\Core\NodeType\NodeTypeName;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
-use Neos\ContentRepository\Domain\Model\Workspace;
-use Neos\ContentRepository\Domain\Repository\WorkspaceRepository;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
@@ -51,14 +49,14 @@ class ComponentCacheFlusher
 
     public function initializeObject(): void
     {
+        /*
         $workspaces = $this->workspaceRepository->findAll();
         foreach ($workspaces as $workspace) {
-            /** @var Workspace $workspace */
             $baseWorkspace = $workspace->getBaseWorkspace();
             if ($baseWorkspace instanceof Workspace) {
                 $this->workspaceGraph[$baseWorkspace->getName()] = $workspace->getName();
             }
-        }
+        }*/
     }
 
     public function whenNodeWasUpdated(Node $node): void
@@ -125,21 +123,23 @@ class ComponentCacheFlusher
 
     private function handleAssetChange(AssetInterface $asset): void
     {
+        return;
+        /*
         $cacheTagsToFlush = [CacheTag::forEverything(null)];
         /** @var string $assetIdentifier */
         $assetIdentifier = $this->persistenceManager->getIdentifierByObject($asset);
         $cacheTagsToFlush[] = CacheTag::forAsset($assetIdentifier, null);
-        foreach ($this->workspaceRepository->findAll() as $workspace) {
-            /** @var Workspace $workspace */
+        /*foreach ($this->workspaceRepository->findAll() as $workspace) {
             $cacheTagsToFlush = [CacheTag::forEverything($workspace->getName())];
             $cacheTagsToFlush[] = CacheTag::forAsset($assetIdentifier, $workspace->getName());
-        }
+        }*/
 
         $this->cacheTagsToFlush = $this->cacheTagsToFlush->union(new CacheTags(...$cacheTagsToFlush));
     }
 
     private function handleNodeChange(Node $node, ?string $workspaceName = null): void
     {
+        return;
         $cacheTagsToFlush = [
             CacheTag::forEverything(null),
             CacheTag::forNode($node, null)
