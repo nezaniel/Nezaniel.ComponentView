@@ -33,7 +33,7 @@ final readonly class ComponentCollection extends AbstractComponent implements Co
 
     public function isEmpty(): bool
     {
-        return empty($this->components);
+        return empty($this->components) || $this->components === ['<span></span>'];
     }
 
     public function render(): string
