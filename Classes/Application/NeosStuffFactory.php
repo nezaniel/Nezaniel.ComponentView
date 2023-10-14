@@ -27,7 +27,7 @@ final class NeosStuffFactory extends AbstractComponentFactory
 
     public function getHeadStuff(ComponentViewRuntimeVariables $runtimeVariables): ?string
     {
-        if (!$runtimeVariables->inBackend) {
+        if (!$runtimeVariables->renderingMode->isEdit) {
             return null;
         }
 

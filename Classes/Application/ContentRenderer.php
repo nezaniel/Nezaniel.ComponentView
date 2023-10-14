@@ -58,7 +58,7 @@ final class ContentRenderer extends AbstractComponentFactory
     ): CacheSegment {
         $workspaceName = $this->getWorkspaceName($node);
         $cacheEntryIdentifier = 'node_' . $node->nodeAggregateId->value
-            . '_' . $workspaceName->value . '_' . $runtimeVariables->inBackend . ($collectionName ? '_' . $collectionName->value : '');
+            . '_' . $workspaceName->value . '_' . $runtimeVariables->renderingMode->name . ($collectionName ? '_' . $collectionName->value : '');
 
         $component = $this->componentCache->findComponent(
             $cacheEntryIdentifier,
@@ -90,7 +90,7 @@ final class ContentRenderer extends AbstractComponentFactory
                 $content = new ComponentCollection('<span></span>');
             }
 
-            $component = $runtimeVariables->inBackend
+            $component = $runtimeVariables->renderingMode->isEdit
                 ? $this->nodeMetadataWrapperFactory->forNode($contentCollection, $content)
                 : $content;
 
@@ -125,7 +125,7 @@ final class ContentRenderer extends AbstractComponentFactory
             $cacheTags
         );
 
-        return $runtimeVariables->inBackend
+        return $runtimeVariables->renderingMode->isEdit
             ? $this->nodeMetadataWrapperFactory->forNode($contentNode, $component)
             : $component;
     }

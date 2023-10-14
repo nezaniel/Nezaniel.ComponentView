@@ -12,6 +12,7 @@ use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\ActionRequest;
+use Neos\Neos\Domain\Model\RenderingMode;
 
 /**
  * Runtime variables for the component view
@@ -24,7 +25,7 @@ final readonly class ComponentViewRuntimeVariables
         public Node $documentNode,
         public ContentSubgraphInterface $subgraph,
         public ActionRequest $request,
-        public bool $inBackend
+        public RenderingMode $renderingMode
     ) {
     }
 
@@ -33,14 +34,14 @@ final readonly class ComponentViewRuntimeVariables
         Node $documentNode = null,
         ContentSubgraphInterface $subgraph = null,
         ActionRequest $request = null,
-        bool $inBackend = null,
+        RenderingMode $renderingMode = null,
     ): self {
         return new self(
             $siteNode ?: $this->siteNode,
             $documentNode ?: $this->documentNode,
             $subgraph ?: $this->subgraph,
             $request ?: $this->request,
-            !is_null($inBackend) ? $inBackend : $this->inBackend,
+            $renderingMode ?: $this->renderingMode,
         );
     }
 }

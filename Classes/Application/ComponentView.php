@@ -8,12 +8,13 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
-use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindAncestorNodesFilter;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\Controller\ControllerContext;
 use Neos\Flow\Mvc\View\AbstractView;
+use Neos\Neos\Domain\Model\RenderingMode;
+use Neos\Neos\Domain\Service\RenderingModeService;
 use Nezaniel\ComponentView\Domain\UriService;
 
 /**
@@ -27,7 +28,18 @@ class ComponentView extends AbstractView
     #[Flow\Inject]
     protected UriService $uriService;
 
+    #[Flow\Inject]
+    protected RenderingModeService $renderingModeService;
+
     private ?Node $documentNode = null;
+
+    protected $supportedOptions = [
+        'renderingModeName' => [
+            RenderingMode::FRONTEND,
+            'Name of the user interface mode to use',
+            'string'
+        ]
+    ];
 
     public function setControllerContext(ControllerContext $controllerContext): void
     {
@@ -60,13 +72,6 @@ class ComponentView extends AbstractView
     {
         $factoryStart = microtime(true);
 
-        $inBackend = match($this->controllerContext->getRequest()->getControllerActionName()) {
-            'show' => false,
-            'preview' => true,
-            default => throw new \InvalidArgumentException('unknown action ' . $this->controllerContext->getRequest()->getControllerActionName())
-        };
-
-        $contentRepository = $this->contentRepositoryRegistry->get($this->documentNode->subgraphIdentity->contentRepositoryId);
         $subgraph = $this->contentRepositoryRegistry->subgraphForNode($this->documentNode);
         $siteNode = $this->documentNode;
         while ($siteNode && !$siteNode->nodeType->isOfType('Neos.Neos:Site')) {
@@ -90,7 +95,7 @@ class ComponentView extends AbstractView
             $this->documentNode,
             $subgraph,
             $this->controllerContext->getRequest(),
-            $inBackend
+            $this->renderingModeService->findByName($this->getOption('renderingModeName'))
         ));
         $factoryTime = microtime(true) - $factoryStart;
         $renderingStart = microtime(true);
