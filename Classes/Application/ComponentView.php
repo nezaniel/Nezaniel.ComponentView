@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
+use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindClosestNodeFilter;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
@@ -73,20 +74,10 @@ class ComponentView extends AbstractView
         $factoryStart = microtime(true);
 
         $subgraph = $this->contentRepositoryRegistry->subgraphForNode($this->documentNode);
-        $siteNode = $this->documentNode;
-        while ($siteNode && !$siteNode->nodeType->isOfType('Neos.Neos:Site')) {
-            $siteNode = $subgraph->findParentNode($siteNode->nodeAggregateId);
-        }
-        /*
-        $siteNode = $contentRepository->getNodeTypeManager()->getNodeType($this->documentNode->nodeTypeName)
-            ->isOfType('Neos.Neos:Site')
-            ? $this->documentNode
-            : $subgraph->findAncestorNodes(
-                $this->documentNode->nodeAggregateId,
-                FindAncestorNodesFilter::create(
-                    nodeTypeConstraints: 'Neos.Neos:Site'
-                )
-            )->first();*/
+        $siteNode = $subgraph->findClosestNode(
+            $this->documentNode->nodeAggregateId,
+            FindClosestNodeFilter::create(nodeTypeConstraints: 'Neos.Neos:Site')
+        );
         assert($siteNode instanceof Node);
 
         $pageFactoryRelay = new PageFactoryRelay();
