@@ -15,13 +15,16 @@ use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\Controller\ControllerContext;
 use Neos\Flow\Mvc\View\AbstractView;
 use Neos\Neos\Domain\Model\RenderingMode;
+use Neos\Neos\Domain\Service\NodeTypeNameFactory;
 use Neos\Neos\Domain\Service\RenderingModeService;
+use Neos\Neos\View\RenderingEntryPointAware;
+use Nezaniel\ComponentView\Domain\RenderingEntryPoint;
 use Nezaniel\ComponentView\Domain\UriService;
 
 /**
  * A view that triggers creation of self-rendering components and lets them render themselves
  */
-class ComponentView extends AbstractView
+class ComponentView extends AbstractView implements RenderingEntryPointAware
 {
     #[Flow\Inject]
     protected ContentRepositoryRegistry $contentRepositoryRegistry;
@@ -33,6 +36,10 @@ class ComponentView extends AbstractView
     protected RenderingModeService $renderingModeService;
 
     private ?Node $documentNode = null;
+
+    private ?Node $node = null;
+
+    private ?RenderingEntryPoint $renderingEntryPoint = null;
 
     protected $supportedOptions = [
         'renderingModeName' => [
@@ -51,7 +58,12 @@ class ComponentView extends AbstractView
     public function assign($key, $value): void
     {
         if ($key === 'value' && $value instanceof Node) {
-            $this->documentNode = $value;
+            $this->node = $value;
+            $subgraph = $this->contentRepositoryRegistry->subgraphForNode($this->node);
+            $this->documentNode = $subgraph->findClosestNode(
+                $value->nodeAggregateId,
+                FindClosestNodeFilter::create(nodeTypeConstraints: 'Neos.Neos:Document')
+            );
         }
     }
 
@@ -59,7 +71,12 @@ class ComponentView extends AbstractView
     {
         foreach ($values as $key => $value) {
             if ($key === 'value' && $value instanceof Node) {
-                $this->documentNode = $value;
+                $this->node = $value;
+                $subgraph = $this->contentRepositoryRegistry->subgraphForNode($this->node);
+                $this->documentNode = $subgraph->findClosestNode(
+                    $value->nodeAggregateId,
+                    FindClosestNodeFilter::create(nodeTypeConstraints: 'Neos.Neos:Document')
+                );
             }
         }
     }
@@ -71,8 +88,6 @@ class ComponentView extends AbstractView
 
     public function render(): string
     {
-        $factoryStart = microtime(true);
-
         $subgraph = $this->contentRepositoryRegistry->subgraphForNode($this->documentNode);
         $siteNode = $subgraph->findClosestNode(
             $this->documentNode->nodeAggregateId,
@@ -80,25 +95,43 @@ class ComponentView extends AbstractView
         );
         assert($siteNode instanceof Node);
 
-        $pageFactoryRelay = new PageFactoryRelay();
-        $page = $pageFactoryRelay->delegate(new ComponentViewRuntimeVariables(
+        $runtimeVariables = new ComponentViewRuntimeVariables(
             $siteNode,
             $this->documentNode,
             $subgraph,
             $this->controllerContext->getRequest(),
             $this->renderingModeService->findByName($this->getOption('renderingModeName'))
-        ));
-        $factoryTime = microtime(true) - $factoryStart;
-        $renderingStart = microtime(true);
-        $result = $page->render();
-        $renderingTime = microtime(true) - $renderingStart;
-        $result .= '<!-- Factory: ' . $factoryTime . ', Rendering: ' . $renderingTime . '-->';
+        );
+        if ($this->renderingEntryPoint) {
+            $factory = (new $this->renderingEntryPoint->className());
+            if ($this->renderingEntryPoint->isContentRendererDelegation()) {
+                /** @var ContentRenderer $factory */
+                $nodeType = $this->contentRepositoryRegistry->get($this->node->subgraphIdentity->contentRepositoryId)
+                    ->getNodeTypeManager()->getNodeType($this->node->nodeTypeName);
+                if ($nodeType->isOfType(NodeTypeNameFactory::NAME_CONTENT_COLLECTION)) {
+                    $component = $factory->forContentCollection($this->node, $runtimeVariables);
+                } else {
+                    $cacheTags = new CacheTags();
+                    $component = $factory->delegate($this->node, $runtimeVariables, $cacheTags);
+                }
+            } else {
+                $component = $factory->{$runtimeVariables};
+            }
+        } else {
+            $pageFactoryRelay = new PageFactoryRelay();
+            $component = $pageFactoryRelay->delegate($runtimeVariables);
+        }
 
-        return $result;
+        return $component->render();
     }
 
     public function canRenderWithNodeAndPath(): bool
     {
         return true;
+    }
+
+    public function setRenderingEntryPoint(string $renderingEntryPoint): void
+    {
+        $this->renderingEntryPoint = RenderingEntryPoint::fromNeosUiString($renderingEntryPoint);
     }
 }

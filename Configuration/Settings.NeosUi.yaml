@@ -1,0 +1,5 @@
+Neos:
+  Neos:
+    Ui:
+      outOfBandRendering:
+        viewObjectName: 'Nezaniel\ComponentView\Application\ComponentView'

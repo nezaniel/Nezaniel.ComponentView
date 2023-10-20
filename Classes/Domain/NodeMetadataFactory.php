@@ -10,6 +10,7 @@ namespace Nezaniel\ComponentView\Domain;
 
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\Flow\Annotations as Flow;
+use Neos\Neos\Domain\Service\NodeTypeNameFactory;
 use Neos\Neos\FrontendRouting\NodeAddressFactory;
 use Neos\Neos\Service\ContentElementWrappingService;
 
@@ -22,15 +23,21 @@ final class NodeMetadataFactory extends ContentElementWrappingService
     /**
      * @return array<string,mixed>|null
      */
-    public function getAugmenterAttributesForContentNode(Node $contentNode, ?string $locator = null): ?array
+    public function getAugmenterAttributesForContentNode(Node $contentNode, ?RenderingEntryPoint $renderingEntryPoint = null): ?array
     {
         $contentRepository = $this->contentRepositoryRegistry->get($contentNode->subgraphIdentity->contentRepositoryId);
-        $locator = is_string($locator) ? $locator : '/<Neos.Neos:Content>/' . $contentNode->nodeAggregateId->value;
+        $renderingEntryPoint ??= RenderingEntryPoint::forContentRendererDelegation();
 
         $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromNode($contentNode);
 
-        $attributes['data-node-__fusion-path'] = $locator;
+        $attributes['data-__neos-fusion-path'] = $renderingEntryPoint->serializeForNeosUi();
         $attributes['data-__neos-node-contextpath'] = $nodeAddress->serializeForUri();
+        if (
+            $contentRepository->getNodeTypeManager()->getNodeType($contentNode->nodeTypeName)
+                ->isOfType(NodeTypeNameFactory::NAME_CONTENT_COLLECTION)
+        ) {
+            $attributes['class'] = 'neos-contentcollection';
+        }
 
         return $attributes;
     }
