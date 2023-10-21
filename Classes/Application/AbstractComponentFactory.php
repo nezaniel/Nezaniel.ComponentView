@@ -9,7 +9,6 @@ declare(strict_types=1);
 namespace Nezaniel\ComponentView\Application;
 
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
-use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
 use Neos\Neos\Service\ContentElementEditableService;
@@ -42,19 +41,5 @@ abstract class AbstractComponentFactory
             . ($node->getProperty($propertyName) ?: '')
             . ($block ? '</div>' : '')
         );
-    }
-
-    final protected function getWorkspaceName(Node $node): WorkspaceName
-    {
-        $workspace = $this->contentRepositoryRegistry->get($node->subgraphIdentity->contentRepositoryId)
-            ->getWorkspaceFinder()
-            ->findOneByCurrentContentStreamId($node->subgraphIdentity->contentStreamId);
-        if (!$workspace) {
-            throw new \InvalidArgumentException(
-                'Cannot resolve workspace for node ' . $node->nodeAggregateId->value,
-                1686433174
-            );
-        }
-        return $workspace->workspaceName;
     }
 }

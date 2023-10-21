@@ -56,9 +56,9 @@ final class ContentRenderer extends AbstractComponentFactory
         ?NodeName $collectionName,
         ComponentViewRuntimeVariables $runtimeVariables,
     ): CacheSegment {
-        $workspaceName = $this->getWorkspaceName($node);
         $cacheEntryIdentifier = 'node_' . $node->nodeAggregateId->value
-            . '_' . $workspaceName->value . '_' . $runtimeVariables->renderingMode->name . ($collectionName ? '_' . $collectionName->value : '');
+            . '_' . $runtimeVariables->documentNode->subgraphIdentity->contentStreamId->value
+            . '_' . $runtimeVariables->renderingMode->name . ($collectionName ? '_' . $collectionName->value : '');
 
         $component = $this->componentCache->findComponent(
             $cacheEntryIdentifier,
@@ -71,9 +71,9 @@ final class ContentRenderer extends AbstractComponentFactory
                     $node->nodeAggregateId,
                     $collectionName
                 ) : $node;
-            $cacheTags = new CacheTags(
-                CacheTag::forAncestorNode($contentCollection, $workspaceName),
-                CacheTag::forNode($contentCollection, $workspaceName)
+            $cacheTags = new CacheTagSet(
+                CacheTag::forAncestorNodeFromNode($contentCollection),
+                CacheTag::forNodeAggregateFromNode($contentCollection)
             );
             $content = new ComponentCollection(... array_map(
                 fn (Node $childNode): ComponentInterface => $this->delegate(
@@ -83,8 +83,8 @@ final class ContentRenderer extends AbstractComponentFactory
                 ),
                 iterator_to_array($runtimeVariables->subgraph->findChildNodes(
                     $contentCollection->nodeAggregateId,
-                    FindChildNodesFilter::create())
-                )
+                    FindChildNodesFilter::create()
+                ))
             ));
             if ($content->isEmpty()) {
                 $content = new ComponentCollection('<span></span>');
@@ -116,7 +116,7 @@ final class ContentRenderer extends AbstractComponentFactory
     public function delegate(
         Node $contentNode,
         ComponentViewRuntimeVariables $runtimeVariables,
-        CacheTags &$cacheTags
+        CacheTagSet &$cacheTags
     ): ComponentInterface {
         $contentComponentFactory = $this->resolveContentComponentFactory($contentNode);
         $component = $contentComponentFactory->forContentNode(

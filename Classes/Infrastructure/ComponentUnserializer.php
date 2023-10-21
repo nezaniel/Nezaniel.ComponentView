@@ -13,7 +13,7 @@ use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeName;
 use Neos\Flow\Annotations as Flow;
-use Nezaniel\ComponentView\Application\CacheTags;
+use Nezaniel\ComponentView\Application\CacheTagSet;
 use Nezaniel\ComponentView\Application\ComponentCache;
 use Nezaniel\ComponentView\Application\ComponentViewRuntimeVariables;
 use Nezaniel\ComponentView\Domain\CacheDirective;
@@ -115,8 +115,7 @@ class ComponentUnserializer
         array $serialization,
         ComponentViewRuntimeVariables $runtimeVariables,
         ComponentCache $cache
-    ): ComponentCollection
-    {
+    ): ComponentCollection {
         $components = [];
         foreach ($serialization['components'] as $serializedComponent) {
             if (is_string($serializedComponent)) {
@@ -199,8 +198,7 @@ class ComponentUnserializer
         CacheDirective $cacheDirective,
         ComponentViewRuntimeVariables $runtimeVariables,
         ComponentCache $cache
-    ): ?ComponentInterface
-    {
+    ): ?ComponentInterface {
         $cachedComponent = $cache->findComponent($cacheDirective->cacheEntryId, $runtimeVariables);
         if ($cachedComponent instanceof ComponentInterface) {
             return $cachedComponent;
@@ -221,7 +219,7 @@ class ComponentUnserializer
             } elseif ($node->nodeType->isOfType('Neos.Neos:ContentCollection')) {
                 return $this->contentRenderer->forContentCollection($node, $runtimeVariables);
             }
-            $cacheTags = new CacheTags();
+            $cacheTags = new CacheTagSet();
 
             return $this->contentRenderer->delegate(
                 $node,

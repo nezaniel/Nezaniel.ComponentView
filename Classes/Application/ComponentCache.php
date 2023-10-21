@@ -27,7 +27,7 @@ class ComponentCache implements CacheInterface
     protected ComponentUnserializer $componentUnserializer;
 
     public function __construct(
-        private StringFrontend $cache
+        private readonly StringFrontend $cache
     ) {
     }
 
@@ -35,7 +35,6 @@ class ComponentCache implements CacheInterface
         string $identifier,
         ComponentViewRuntimeVariables $runtimeVariables
     ): ?ComponentInterface {
-        return null;
         $data = $this->get($identifier);
         if (is_string($data)) {
             $serialization = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
@@ -60,7 +59,7 @@ class ComponentCache implements CacheInterface
         return null;
     }
 
-    public function set(string $key, mixed $value, \DateInterval|int|null $ttl = null, ?CacheTags $tags = null): bool
+    public function set(string $key, mixed $value, \DateInterval|int|null $ttl = null, ?CacheTagSet $tags = null): bool
     {
         if (!$value instanceof ComponentInterface) {
             throw new InvalidArgumentException('Cache entries must implement ' . ComponentInterface::class, 1659211321);
@@ -98,7 +97,7 @@ class ComponentCache implements CacheInterface
         return $this->cache->flushByTag($tag->value);
     }
 
-    public function clearByTags(CacheTags $tags): int
+    public function clearByTags(CacheTagSet $tags): int
     {
         return $this->cache->flushByTags($tags->toStringArray());
     }

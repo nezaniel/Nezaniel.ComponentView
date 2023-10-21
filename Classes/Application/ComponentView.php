@@ -111,7 +111,7 @@ class ComponentView extends AbstractView implements RenderingEntryPointAware
                 if ($nodeType->isOfType(NodeTypeNameFactory::NAME_CONTENT_COLLECTION)) {
                     $component = $factory->forContentCollection($this->node, $runtimeVariables);
                 } else {
-                    $cacheTags = new CacheTags();
+                    $cacheTags = new CacheTagSet();
                     $component = $factory->delegate($this->node, $runtimeVariables, $cacheTags);
                 }
             } else {

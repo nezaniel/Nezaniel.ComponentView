@@ -8,186 +8,103 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Infrastructure;
 
+use Neos\ContentRepository\Core\ContentRepository;
+use Neos\ContentRepository\Core\NodeType\NodeType;
 use Neos\ContentRepository\Core\NodeType\NodeTypeName;
-use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
-use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
+use Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
+use Neos\ContentRepository\Core\SharedModel\Workspace\ContentStreamId;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
 use Neos\Media\Domain\Model\AssetInterface;
+use Neos\Media\Domain\Model\AssetVariantInterface;
+use Neos\Neos\Cache\ContentCacheFlusherInterface;
 use Nezaniel\ComponentView\Application\CacheTag;
-use Nezaniel\ComponentView\Application\CacheTags;
+use Nezaniel\ComponentView\Application\CacheTagSet;
 use Nezaniel\ComponentView\Application\ComponentCache;
 
-/**
- * The component cache flusher infrastructure service
- */
 #[Flow\Scope('singleton')]
-class ComponentCacheFlusher
+readonly class ComponentCacheFlusher implements ContentCacheFlusherInterface
 {
-    #[Flow\Inject]
-    protected ComponentCache $cache;
-
-    #[Flow\Inject]
-    protected ContentRepositoryRegistry $contentRepositoryRegistry;
-
-    #[Flow\Inject]
-    protected PersistenceManagerInterface $persistenceManager;
-
-    private CacheTags $cacheTagsToFlush;
-
-    /**
-     * The workspace graph collection, indexed by content repository ID
-     * @var array<string,array<string,string>>
-     */
-    private array $workspaceGraph;
-
-    public function __construct()
-    {
-        $this->cacheTagsToFlush = new CacheTags();
-        $this->workspaceGraph = [];
+    public function __construct(
+        private ComponentCache $cache,
+        private PersistenceManagerInterface $persistenceManager,
+    ) {
     }
 
-    public function initializeObject(): void
-    {
-        /*
-        $workspaces = $this->workspaceRepository->findAll();
-        foreach ($workspaces as $workspace) {
-            $baseWorkspace = $workspace->getBaseWorkspace();
-            if ($baseWorkspace instanceof Workspace) {
-                $this->workspaceGraph[$baseWorkspace->getName()] = $workspace->getName();
-            }
-        }*/
-    }
-
-    public function whenNodeWasUpdated(Node $node): void
-    {
-        $this->handleNodeChange($node);
-    }
-
-    public function whenNodeWasAdded(Node $node): void
-    {
-        $this->handleNodeChange($node);
-    }
-
-    public function whenNodeWasRemoved(Node $node): void
-    {
-        $this->handleNodeChange($node);
-    }
-
-    public function whenNodeWasMoved(Node $node): void
-    {
-        $this->handleNodeChange($node);
-    }
-
-    public function whenNodeWasPublished(Node $node, ?Workspace $targetWorkspace = null): void
-    {
-        $this->handleNodeChange($node, $targetWorkspace?->getName());
-    }
-
-    public function whenNodeWasDiscarded(Node $node, ?Workspace $targetWorkspace = null): void
-    {
-        $this->handleNodeChange($node, $targetWorkspace?->getName());
-    }
-
-    public function whenAssetWasChanged(AssetInterface $asset): void
-    {
-        $this->handleAssetChange($asset);
-    }
-
-    public function whenSiteWasPruned(): void
-    {
-        $this->cache->clear();
-    }
-
-    public function whenSiteWasImported(): void
-    {
-        $this->cache->clear();
-    }
-
-    /**
-     * @param array<string,int> $changedFiles
-     */
-    public function whenFilesWereChanged(string $fileMonitorIdentifier, array $changedFiles): void
-    {
-        $fileMonitorsThatTriggerComponentCacheFlush = [
-            'ContentRepository_NodeTypesConfiguration',
-            'Flow_ClassFiles',
-            'Flow_ConfigurationFiles',
-            'Flow_TranslationFiles'
+    public function flushNodeAggregate(
+        ContentRepository $contentRepository,
+        ContentStreamId $contentStreamId,
+        NodeAggregateId $nodeAggregateId
+    ): void {
+        $cacheTags = [
+            CacheTag::forEverything($contentRepository->id, $contentStreamId),
+            CacheTag::forNodeAggregate($contentRepository->id, $contentStreamId, $nodeAggregateId)
         ];
 
-        if (in_array($fileMonitorIdentifier, $fileMonitorsThatTriggerComponentCacheFlush)) {
-            $this->cache->clear();
+        $nodeAggregate = $contentRepository->getContentGraph()->findNodeAggregateById($contentStreamId, $nodeAggregateId);
+        foreach (
+            $this->resolveAllSuperTypeNames(
+                $contentRepository->getNodeTypeManager()->getNodeType($nodeAggregate->nodeTypeName)
+            ) as $nodeTypeName
+        ) {
+            $cacheTags[] = CacheTag::forNodeTypeName($contentRepository->id, $nodeAggregate->contentStreamId, $nodeTypeName);
         }
+        $cacheTagsToFlush = new CacheTagSet(...$cacheTags);
+
+        $cacheTagsToFlush = $cacheTagsToFlush->union($this->processAncestors($contentRepository, $nodeAggregate));
+
+        file_put_contents(FLOW_PATH_DATA . 'Flushed_CacheTags.txt', implode("\n", $cacheTagsToFlush->toStringArray()));
+        $this->cache->clearByTags($cacheTagsToFlush);
     }
 
-    private function handleAssetChange(AssetInterface $asset): void
+    private function processAncestors(ContentRepository $contentRepository, NodeAggregate $nodeAggregate): CacheTagSet
     {
-        return;
-        /*
-        $cacheTagsToFlush = [CacheTag::forEverything(null)];
-        /** @var string $assetIdentifier */
-        $assetIdentifier = $this->persistenceManager->getIdentifierByObject($asset);
-        $cacheTagsToFlush[] = CacheTag::forAsset($assetIdentifier, null);
-        /*foreach ($this->workspaceRepository->findAll() as $workspace) {
-            $cacheTagsToFlush = [CacheTag::forEverything($workspace->getName())];
-            $cacheTagsToFlush[] = CacheTag::forAsset($assetIdentifier, $workspace->getName());
-        }*/
+        $cacheTagsToFlush = new CacheTagSet(
+            CacheTag::forAncestorNode($contentRepository->id, $nodeAggregate->contentStreamId, $nodeAggregate->nodeAggregateId)
+        );
 
-        $this->cacheTagsToFlush = $this->cacheTagsToFlush->union(new CacheTags(...$cacheTagsToFlush));
-    }
-
-    private function handleNodeChange(Node $node, ?string $workspaceName = null): void
-    {
-        return;
-        $cacheTagsToFlush = [
-            CacheTag::forEverything(null),
-            CacheTag::forNode($node, null)
-        ];
-        $workspaceName = $workspaceName ?: $node->getContext()->getWorkspace()->getName();
-        $nodeTypes = $this->resolveAllSuperTypes($node->getNodeType());
-
-        while ($workspaceName) {
-            $cacheTagsToFlush[] = CacheTag::forEverything($workspaceName);
-            $cacheTagsToFlush[] = CacheTag::forNode($node, $workspaceName);
-            $ancestor = $node;
-            while ($ancestor) {
-                $cacheTagsToFlush[] = CacheTag::forAncestorNode($ancestor, null);
-                $cacheTagsToFlush[] = CacheTag::forAncestorNode($ancestor, $workspaceName);
-                $ancestor = $ancestor->getParent();
-            }
-            foreach ($nodeTypes as $nodeType) {
-                $cacheTagsToFlush[] = CacheTag::forNodeTypeName(NodeTypeName::fromString($nodeType->getName()), null);
-                $cacheTagsToFlush[] = CacheTag::forNodeTypeName(
-                    NodeTypeName::fromString($nodeType->getName()),
-                    $workspaceName
-                );
-            }
-
-            $workspaceName = $this->workspaceGraph[$workspaceName] ?? null;
+        foreach (
+            $contentRepository->getContentGraph()->findParentNodeAggregates(
+                $nodeAggregate->contentStreamId,
+                $nodeAggregate->nodeAggregateId
+            ) as $parentNodeAggregate
+        ) {
+            $cacheTagsToFlush = $cacheTagsToFlush->union($this->processAncestors($contentRepository, $parentNodeAggregate));
         }
 
-        $this->cacheTagsToFlush = $this->cacheTagsToFlush->union(new CacheTags(...$cacheTagsToFlush));
+        return $cacheTagsToFlush;
+    }
+
+    public function registerAssetChange(AssetInterface $asset): void
+    {
+        $assetIds = [$this->persistenceManager->getIdentifierByObject($asset)];
+        if ($asset instanceof AssetVariantInterface) {
+            $assetIds[] = $this->persistenceManager->getIdentifierByObject($asset->getOriginalAsset());
+        }
+
+        $this->cache->clearByTags(new CacheTagSet(
+            CacheTag::forEverything(null, null),
+            ...array_map(
+                fn (string $assetId): CacheTag => CacheTag::forAsset($assetId),
+                array_filter($assetIds, fn (mixed $assetId): bool => is_string($assetId))
+            )
+        ));
     }
 
     /**
      * @param NodeType $nodeType
-     * @return array<string,NodeType>
+     * @return array<string,NodeTypeName>
      */
-    private function resolveAllSuperTypes(NodeType $nodeType): array
+    private function resolveAllSuperTypeNames(NodeType $nodeType): array
     {
         $superTypes = [];
-        $superTypes[$nodeType->getName()] = $nodeType;
+        $superTypes[$nodeType->name->value] = $nodeType->name;
 
         foreach ($nodeType->getDeclaredSuperTypes() as $superType) {
-            $superTypes = array_merge($superTypes, $this->resolveAllSuperTypes($superType));
+            $superTypes = array_merge($superTypes, $this->resolveAllSuperTypeNames($superType));
         }
 
         return $superTypes;
-    }
-
-    public function shutdownObject(): void
-    {
-        $this->cache->clearByTags($this->cacheTagsToFlush);
     }
 }

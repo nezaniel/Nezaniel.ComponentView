@@ -73,6 +73,6 @@ final class RenderingEntryPoint
 
     public function serializeForNeosUi(): string
     {
-        return \str_replace('\\', '.', $this->className) .'/' . $this->methodName;
+        return \str_replace('\\', '.', $this->className) . '/' . $this->methodName;
     }
 }

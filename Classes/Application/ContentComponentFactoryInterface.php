@@ -19,6 +19,6 @@ interface ContentComponentFactoryInterface
     public function forContentNode(
         Node $contentNode,
         ComponentViewRuntimeVariables $runtimeVariables,
-        CacheTags &$cacheTags
+        CacheTagSet &$cacheTags
     ): ComponentInterface;
 }
