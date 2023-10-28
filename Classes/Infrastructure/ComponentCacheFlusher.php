@@ -15,6 +15,7 @@ use Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
 use Neos\ContentRepository\Core\SharedModel\Workspace\ContentStreamId;
 use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Aop\JoinPointInterface;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
 use Neos\Media\Domain\Model\AssetInterface;
 use Neos\Media\Domain\Model\AssetVariantInterface;
@@ -33,11 +34,12 @@ readonly class ComponentCacheFlusher
     }
 
     #[Flow\Around('method(Neos\Neos\Fusion\Cache\ContentCacheFlusher->flushNodeAggregate())')]
-    public function flushNodeAggregate(
-        ContentRepository $contentRepository,
-        ContentStreamId $contentStreamId,
-        NodeAggregateId $nodeAggregateId
-    ): void {
+    public function flushNodeAggregate(JoinPointInterface $joinPoint): void
+    {
+        $contentRepository = $joinPoint->getMethodArgument('contentRepository');
+        $contentStreamId = $joinPoint->getMethodArgument('contentStreamId');
+        $nodeAggregateId = $joinPoint->getMethodArgument('nodeAggregateId');
+
         $cacheTags = [
             CacheTag::forEverything($contentRepository->id, $contentStreamId),
             CacheTag::forNodeAggregate($contentRepository->id, $contentStreamId, $nodeAggregateId)

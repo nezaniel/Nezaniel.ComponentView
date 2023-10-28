@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace Nezaniel\ComponentView\Infrastructure;
 
 use Neos\Flow\Annotations as Flow;
-use Neos\Flow\Mvc\Controller\ControllerContext;
+use Neos\Flow\Aop\JoinPointInterface;
 use Neos\Neos\Ui\Domain\Model\Feedback\Operations\RenderContentOutOfBand;
 use Nezaniel\ComponentView\Application\ComponentView;
 use Psr\Http\Message\ResponseInterface;
@@ -18,9 +18,10 @@ use Psr\Http\Message\ResponseInterface;
 #[Flow\Aspect]
 final class OutOfBandRenderer extends RenderContentOutOfBand
 {
-    #[Flow\Around('method(Neos\Neos\Ui\Domain\Model\Feedback\Operations\RenderContentOutOfBand->renderContent())')]
-    public function renderContent(ControllerContext $controllerContext): string|ResponseInterface
+    #[Flow\Around('method(protected Neos\Neos\Ui\Domain\Model\Feedback\Operations\RenderContentOutOfBand->renderContent())')]
+    public function renderContentOutOfBand(JoinPointInterface $joinPoint): string|ResponseInterface
     {
+        $controllerContext = $joinPoint->getMethodArgument('controllerContext');
         if (is_null($this->node)) {
             return '';
         }
