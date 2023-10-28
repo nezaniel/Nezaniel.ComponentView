@@ -7,6 +7,3 @@ Nezaniel\ComponentView\Application\ComponentCache:
         arguments:
           1:
             value: Nezaniel_ComponentView_Components
-
-Neos\Neos\Cache\ContentCacheFlusherInterface:
-  className: Nezaniel\ComponentView\Infrastructure\ComponentCacheFlusher
