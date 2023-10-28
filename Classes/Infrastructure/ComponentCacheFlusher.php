@@ -18,13 +18,13 @@ use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
 use Neos\Media\Domain\Model\AssetInterface;
 use Neos\Media\Domain\Model\AssetVariantInterface;
-use Neos\Neos\Cache\ContentCacheFlusherInterface;
 use Nezaniel\ComponentView\Application\CacheTag;
 use Nezaniel\ComponentView\Application\CacheTagSet;
 use Nezaniel\ComponentView\Application\ComponentCache;
 
 #[Flow\Scope('singleton')]
-readonly class ComponentCacheFlusher implements ContentCacheFlusherInterface
+#[Flow\Aspect]
+readonly class ComponentCacheFlusher
 {
     public function __construct(
         private ComponentCache $cache,
@@ -32,6 +32,7 @@ readonly class ComponentCacheFlusher implements ContentCacheFlusherInterface
     ) {
     }
 
+    #[Flow\Around('method(Neos\Neos\Fusion\Cache\ContentCacheFlusher->flushNodeAggregate())')]
     public function flushNodeAggregate(
         ContentRepository $contentRepository,
         ContentStreamId $contentStreamId,
