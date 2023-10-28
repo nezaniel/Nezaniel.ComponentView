@@ -43,16 +43,20 @@ readonly class ComponentCacheFlusher implements ContentCacheFlusherInterface
         ];
 
         $nodeAggregate = $contentRepository->getContentGraph()->findNodeAggregateById($contentStreamId, $nodeAggregateId);
-        foreach (
-            $this->resolveAllSuperTypeNames(
-                $contentRepository->getNodeTypeManager()->getNodeType($nodeAggregate->nodeTypeName)
-            ) as $nodeTypeName
-        ) {
-            $cacheTags[] = CacheTag::forNodeTypeName($contentRepository->id, $nodeAggregate->contentStreamId, $nodeTypeName);
+        if ($nodeAggregate) {
+            foreach (
+                $this->resolveAllSuperTypeNames(
+                    $contentRepository->getNodeTypeManager()->getNodeType($nodeAggregate->nodeTypeName)
+                ) as $nodeTypeName
+            ) {
+                $cacheTags[] = CacheTag::forNodeTypeName($contentRepository->id, $nodeAggregate->contentStreamId, $nodeTypeName);
+            }
         }
         $cacheTagsToFlush = new CacheTagSet(...$cacheTags);
 
-        $cacheTagsToFlush = $cacheTagsToFlush->union($this->processAncestors($contentRepository, $nodeAggregate));
+        if ($nodeAggregate) {
+            $cacheTagsToFlush = $cacheTagsToFlush->union($this->processAncestors($contentRepository, $nodeAggregate));
+        }
 
         file_put_contents(FLOW_PATH_DATA . 'Flushed_CacheTags.txt', implode("\n", $cacheTagsToFlush->toStringArray()));
         $this->cache->clearByTags($cacheTagsToFlush);

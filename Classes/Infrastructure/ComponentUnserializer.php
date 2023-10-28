@@ -216,7 +216,7 @@ class ComponentUnserializer
                     $cacheDirective->nodeName,
                     $runtimeVariables
                 );
-            } elseif ($node->nodeType->isOfType('Neos.Neos:ContentCollection')) {
+            } elseif ($node->nodeType?->isOfType('Neos.Neos:ContentCollection')) {
                 return $this->contentRenderer->forContentCollection($node, $runtimeVariables);
             }
             $cacheTags = new CacheTagSet();
