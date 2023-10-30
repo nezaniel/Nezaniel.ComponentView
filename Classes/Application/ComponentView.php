@@ -17,13 +17,14 @@ use Neos\Flow\Mvc\View\AbstractView;
 use Neos\Neos\Domain\Model\RenderingMode;
 use Neos\Neos\Domain\Service\NodeTypeNameFactory;
 use Neos\Neos\Domain\Service\RenderingModeService;
+use Neos\Neos\Ui\View\OutOfBandRenderingCapable;
 use Nezaniel\ComponentView\Domain\RenderingEntryPoint;
 use Nezaniel\ComponentView\Domain\UriService;
 
 /**
  * A view that triggers creation of self-rendering components and lets them render themselves
  */
-class ComponentView extends AbstractView
+class ComponentView extends AbstractView implements OutOfBandRenderingCapable
 {
     #[Flow\Inject]
     protected ContentRepositoryRegistry $contentRepositoryRegistry;
