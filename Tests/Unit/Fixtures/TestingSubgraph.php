@@ -8,6 +8,11 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Tests\Unit\Fixtures;
 
+use Neos\ContentRepository\Core\DimensionSpace\DimensionSpacePoint;
+use Neos\ContentRepository\Core\Factory\ContentRepositoryId;
+use Neos\ContentRepository\Core\NodeType\NodeTypeName;
+use Neos\ContentRepository\Core\Projection\ContentGraph\AbsoluteNodePath;
+use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphIdentity;
 use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Filter;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
@@ -15,8 +20,10 @@ use Neos\ContentRepository\Core\Projection\ContentGraph\NodePath;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Nodes;
 use Neos\ContentRepository\Core\Projection\ContentGraph\References;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Subtree;
+use Neos\ContentRepository\Core\Projection\ContentGraph\VisibilityConstraints;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeName;
+use Neos\ContentRepository\Core\SharedModel\Workspace\ContentStreamId;
 
 final class TestingSubgraph implements ContentSubgraphInterface
 {
@@ -107,9 +114,12 @@ final class TestingSubgraph implements ContentSubgraphInterface
         return null;
     }
 
-    public function retrieveNodePath(NodeAggregateId $nodeAggregateId): NodePath
+    public function retrieveNodePath(NodeAggregateId $nodeAggregateId): AbsoluteNodePath
     {
-        return NodePath::fromPathSegments([]);
+        throw new \InvalidArgumentException(
+            'Failed to retrieve node path for node "' . $nodeAggregateId->value . '"',
+            1687513836
+        );
     }
 
     public function countNodes(): int
@@ -123,5 +133,44 @@ final class TestingSubgraph implements ContentSubgraphInterface
     public function jsonSerialize(): array
     {
         return [];
+    }
+
+    public function getIdentity(): ContentSubgraphIdentity
+    {
+        return ContentSubgraphIdentity::create(
+            ContentRepositoryId::fromString('default'),
+            ContentStreamId::fromString('cs-id'),
+            DimensionSpacePoint::fromArray([]),
+            VisibilityConstraints::withoutRestrictions()
+        );
+    }
+
+    public function findRootNodeByType(NodeTypeName $nodeTypeName): ?Node
+    {
+        return null;
+    }
+
+    public function findAncestorNodes(
+        NodeAggregateId $entryNodeAggregateId,
+        Filter\FindAncestorNodesFilter $filter
+    ): Nodes {
+        return Nodes::createEmpty();
+    }
+
+    public function countAncestorNodes(
+        NodeAggregateId $entryNodeAggregateId,
+        Filter\CountAncestorNodesFilter $filter
+    ): int {
+        return 0;
+    }
+
+    public function findClosestNode(NodeAggregateId $entryNodeAggregateId, Filter\FindClosestNodeFilter $filter): ?Node
+    {
+        return null;
+    }
+
+    public function findNodeByAbsolutePath(AbsoluteNodePath $path): ?Node
+    {
+        return null;
     }
 }

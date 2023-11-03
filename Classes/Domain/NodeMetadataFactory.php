@@ -63,12 +63,8 @@ final class NodeMetadataFactory extends ContentElementWrappingService
         $locator = is_string($locator) ? $locator : '/<Neos.Neos:Document>/' . $documentNode->nodeAggregateId->value;
 
         $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromNode($documentNode);
-        \Neos\Flow\var_dump($nodeAddress);
         $metadata['data-__neos-node-contextpath'] = $nodeAddress->serializeForUri();
         $metadata['data-__neos-fusion-path'] = $locator;
-        $metadata = $this->addGenericEditingMetadata($metadata, $documentNode);
-        $metadata = $this->addNodePropertyAttributes($metadata, $documentNode);
-        $metadata = $this->addDocumentMetadata($contentRepository, $metadata, $documentNode, $siteNode);
         $metadata = $this->addCssClasses($metadata, $documentNode);
 
         return $metadata;

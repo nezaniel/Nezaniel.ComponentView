@@ -14,17 +14,17 @@ use Neos\Flow\Annotations as Flow;
  * A cache segment defined by its cache directive and optional rendered content
  */
 #[Flow\Proxy(false)]
-final class CacheSegment implements ComponentInterface, ComponentContainerInterface
+final readonly class CacheSegment implements ComponentInterface, ComponentContainerInterface
 {
     public function __construct(
-        public readonly CacheDirective $cacheDirective,
-        public readonly ComponentInterface|string|null $content
+        public CacheDirective $cacheDirective,
+        public ComponentInterface|string|null $content
     ) {
     }
 
     public function render(): string
     {
-        return $this->content?->render() ?: '';
+        return is_string($this->content) ? $this->content : ($this->content?->render() ?: '');
     }
 
     public function __toString(): string
@@ -32,6 +32,9 @@ final class CacheSegment implements ComponentInterface, ComponentContainerInterf
         return $this->render();
     }
 
+    /**
+     * @return array<string,mixed>
+     */
     public function serializeForCache(): array
     {
         return [
@@ -41,7 +44,7 @@ final class CacheSegment implements ComponentInterface, ComponentContainerInterf
     }
 
     /**
-     * @return array<string,ComponentInterface|null|string>
+     * @return array<string,mixed>
      */
     public function jsonSerialize(): array
     {

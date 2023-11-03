@@ -113,7 +113,7 @@ final class UriService
         return $this->controllerContext;
     }
 
-    public function resolveLinkUri(string $rawLinkUri, ContentSubgraphInterface $subgraph): Uri
+    public function resolveLinkUri(string $rawLinkUri, ContentSubgraphInterface $subgraph): UriInterface
     {
         if (\mb_substr($rawLinkUri, 0, 7) === 'node://') {
             $nodeIdentifier = \mb_substr($rawLinkUri, 7);

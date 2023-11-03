@@ -71,6 +71,7 @@ final class ContentRenderer extends AbstractComponentFactory
                     $node->nodeAggregateId,
                     $collectionName
                 ) : $node;
+            assert($contentCollection instanceof Node);
             $cacheTags = new CacheTagSet(
                 CacheTag::forAncestorNodeFromNode($contentCollection),
                 CacheTag::forNodeAggregateFromNode($contentCollection)

@@ -36,8 +36,11 @@ readonly class ComponentCacheFlusher
     #[Flow\Around('method(Neos\Neos\Fusion\Cache\ContentCacheFlusher->flushNodeAggregate())')]
     public function flushNodeAggregate(JoinPointInterface $joinPoint): void
     {
+        /** @var ContentRepository $contentRepository */
         $contentRepository = $joinPoint->getMethodArgument('contentRepository');
+        /** @var ContentStreamId $contentStreamId */
         $contentStreamId = $joinPoint->getMethodArgument('contentStreamId');
+        /** @var NodeAggregateId $nodeAggregateId */
         $nodeAggregateId = $joinPoint->getMethodArgument('nodeAggregateId');
 
         $cacheTags = [
@@ -61,7 +64,6 @@ readonly class ComponentCacheFlusher
             $cacheTagsToFlush = $cacheTagsToFlush->union($this->processAncestors($contentRepository, $nodeAggregate));
         }
 
-        file_put_contents(FLOW_PATH_DATA . 'Flushed_CacheTags.txt', implode("\n", $cacheTagsToFlush->toStringArray()));
         $this->cache->clearByTags($cacheTagsToFlush);
     }
 

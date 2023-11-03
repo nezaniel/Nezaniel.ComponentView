@@ -62,7 +62,7 @@ class ComponentView extends AbstractView implements OutOfBandRenderingCapable
             $subgraph = $this->contentRepositoryRegistry->subgraphForNode($this->node);
             $this->documentNode = $subgraph->findClosestNode(
                 $value->nodeAggregateId,
-                FindClosestNodeFilter::create(nodeTypeConstraints: 'Neos.Neos:Document')
+                FindClosestNodeFilter::create(nodeTypes: 'Neos.Neos:Document')
             );
         }
     }
@@ -75,7 +75,7 @@ class ComponentView extends AbstractView implements OutOfBandRenderingCapable
                 $subgraph = $this->contentRepositoryRegistry->subgraphForNode($this->node);
                 $this->documentNode = $subgraph->findClosestNode(
                     $value->nodeAggregateId,
-                    FindClosestNodeFilter::create(nodeTypeConstraints: 'Neos.Neos:Document')
+                    FindClosestNodeFilter::create(nodeTypes: 'Neos.Neos:Document')
                 );
             }
         }
@@ -91,7 +91,7 @@ class ComponentView extends AbstractView implements OutOfBandRenderingCapable
         $subgraph = $this->contentRepositoryRegistry->subgraphForNode($this->documentNode);
         $siteNode = $subgraph->findClosestNode(
             $this->documentNode->nodeAggregateId,
-            FindClosestNodeFilter::create(nodeTypeConstraints: 'Neos.Neos:Site')
+            FindClosestNodeFilter::create(nodeTypes: 'Neos.Neos:Site')
         );
         assert($siteNode instanceof Node);
 

@@ -102,17 +102,26 @@ class ComponentCache implements CacheInterface
         return $this->cache->flushByTags($tags->toStringArray());
     }
 
-    public function getMultiple(iterable $keys, mixed $default = null): iterable
+    /**
+     * @param iterable<mixed> $keys
+     */
+    public function getMultiple(iterable $keys, mixed $default = null): never
     {
         throw new \BadMethodCallException('Method ' . __METHOD__ . ' is not supported yet', 1659390465);
     }
 
-    public function setMultiple(iterable $values, \DateInterval|int|null $ttl = null): bool
+    /**
+     * @param iterable<mixed> $values
+     */
+    public function setMultiple(iterable $values, \DateInterval|int|null $ttl = null): never
     {
         throw new \BadMethodCallException('Method ' . __METHOD__ . ' is not supported yet', 1659390465);
     }
 
-    public function deleteMultiple(iterable $keys): bool
+    /**
+     * @param iterable<mixed> $keys
+     */
+    public function deleteMultiple(iterable $keys): never
     {
         throw new \BadMethodCallException('Method ' . __METHOD__ . ' is not supported yet', 1659390465);
     }

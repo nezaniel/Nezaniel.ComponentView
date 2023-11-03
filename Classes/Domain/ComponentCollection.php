@@ -17,7 +17,7 @@ use Neos\Flow\Annotations as Flow;
 final readonly class ComponentCollection extends AbstractComponent implements ComponentContainerInterface
 {
     /**
-     * @var array<int,ComponentInterface|string>
+     * @var array<int|string,ComponentInterface|string>
      */
     private array $components;
 
