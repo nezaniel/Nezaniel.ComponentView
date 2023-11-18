@@ -54,7 +54,7 @@ final class CacheTagSet
     public function add(CacheTag $cacheTag): self
     {
         $tags = $this->tags;
-        $tags[] = $cacheTag;
+        $tags[$cacheTag->value] = $cacheTag;
 
         return new self(...$tags);
     }

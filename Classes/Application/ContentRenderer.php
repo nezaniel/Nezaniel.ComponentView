@@ -77,11 +77,14 @@ final class ContentRenderer extends AbstractComponentFactory
                 CacheTag::forNodeAggregateFromNode($contentCollection)
             );
             $content = new ComponentCollection(... array_map(
-                fn (Node $childNode): ComponentInterface => $this->delegate(
-                    $childNode,
-                    $runtimeVariables,
-                    $cacheTags
-                ),
+                // We can't use an arrow function here because we need to modify $cacheTags
+                function (Node $childNode) use($runtimeVariables, &$cacheTags): ComponentInterface {
+                    return $this->delegate(
+                        $childNode,
+                        $runtimeVariables,
+                        $cacheTags
+                    );
+                },
                 iterator_to_array($runtimeVariables->subgraph->findChildNodes(
                     $contentCollection->nodeAggregateId,
                     FindChildNodesFilter::create()
