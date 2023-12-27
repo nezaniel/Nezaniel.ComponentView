@@ -94,6 +94,7 @@ class ComponentUnserializer
                     'string', 'int', 'bool', 'float', 'array' => $propertyValue['value'],
                     UriInterface::class, Uri::class => new Uri($propertyValue['value']),
                     default => \enum_exists($propertyType)
+                        /** @phpstan-ignore-next-line Don't know how to check against \BackedEnum */
                         ? $propertyType::from($propertyValue['value'])
                         : $this->unserializeComponent(
                             $propertyValue,

@@ -57,9 +57,6 @@ final class NodeMetadataFactory extends ContentElementWrappingService
     public function forDocumentNode(Node $documentNode, ?string $locator = null, ?Node $siteNode = null): ?array
     {
         $contentRepository = $this->contentRepositoryRegistry->get($documentNode->subgraphIdentity->contentRepositoryId);
-        if (!$this->needsMetadata($documentNode, $contentRepository, true)) {
-            return null;
-        }
         $locator = is_string($locator) ? $locator : '/<Neos.Neos:Document>/' . $documentNode->nodeAggregateId->value;
 
         $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromNode($documentNode);

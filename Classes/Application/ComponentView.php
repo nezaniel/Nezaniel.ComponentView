@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
+use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindClosestNodeFilter;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
@@ -41,6 +42,9 @@ class ComponentView extends AbstractView implements OutOfBandRenderingCapable
 
     private ?RenderingEntryPoint $renderingEntryPoint = null;
 
+    /**
+     * @var array<string,mixed>
+     */
     protected $supportedOptions = [
         'renderingModeName' => [
             RenderingMode::FRONTEND,
@@ -55,30 +59,31 @@ class ComponentView extends AbstractView implements OutOfBandRenderingCapable
         $this->uriService->setControllerContext($controllerContext);
     }
 
-    public function assign($key, $value): void
+    public function assign($key, $value): self
     {
         if ($key === 'value' && $value instanceof Node) {
             $this->node = $value;
             $subgraph = $this->contentRepositoryRegistry->subgraphForNode($this->node);
-            $this->documentNode = $subgraph->findClosestNode(
-                $value->nodeAggregateId,
-                FindClosestNodeFilter::create(nodeTypes: 'Neos.Neos:Document')
-            );
+            $this->documentNode = $this->findClosestDocument($subgraph, $value);
         }
+
+        return $this;
     }
 
-    public function assignMultiple(array $values): void
+    /**
+     * @param array<string,mixed> $values
+     */
+    public function assignMultiple(array $values): self
     {
         foreach ($values as $key => $value) {
             if ($key === 'value' && $value instanceof Node) {
                 $this->node = $value;
                 $subgraph = $this->contentRepositoryRegistry->subgraphForNode($this->node);
-                $this->documentNode = $subgraph->findClosestNode(
-                    $value->nodeAggregateId,
-                    FindClosestNodeFilter::create(nodeTypes: 'Neos.Neos:Document')
-                );
+                $this->documentNode = $this->findClosestDocument($subgraph, $value);
             }
         }
+
+        return $this;
     }
 
     public function canRender(ControllerContext $controllerContext): bool
@@ -88,19 +93,20 @@ class ComponentView extends AbstractView implements OutOfBandRenderingCapable
 
     public function render(): string
     {
+        assert($this->documentNode instanceof Node);
         $subgraph = $this->contentRepositoryRegistry->subgraphForNode($this->documentNode);
-        $siteNode = $subgraph->findClosestNode(
-            $this->documentNode->nodeAggregateId,
-            FindClosestNodeFilter::create(nodeTypes: 'Neos.Neos:Site')
-        );
+        $siteNode = $this->findClosestSite($subgraph, $this->documentNode);
         assert($siteNode instanceof Node);
+        assert($this->node instanceof Node);
+        /** @var string $renderingModeName */
+        $renderingModeName = $this->getOption('renderingModeName');
 
         $runtimeVariables = new ComponentViewRuntimeVariables(
             $siteNode,
             $this->documentNode,
             $subgraph,
             $this->controllerContext->getRequest(),
-            $this->renderingModeService->findByName($this->getOption('renderingModeName'))
+            $this->renderingModeService->findByName($renderingModeName)
         );
         if ($this->renderingEntryPoint) {
             $factory = (new $this->renderingEntryPoint->className());
@@ -123,6 +129,32 @@ class ComponentView extends AbstractView implements OutOfBandRenderingCapable
         }
 
         return $component->render();
+    }
+
+    private function findClosestDocument(ContentSubgraphInterface $subgraph, Node $node): ?Node
+    {
+        $nodeType = $this->contentRepositoryRegistry->get($subgraph->getIdentity()->contentRepositoryId)
+            ->getNodeTypeManager()->getNodeType($node->nodeTypeName);
+        if ($nodeType->isOfType(NodeTypeNameFactory::NAME_DOCUMENT)) {
+            return $node;
+        }
+        return $subgraph->findClosestNode(
+            $node->nodeAggregateId,
+            FindClosestNodeFilter::create(nodeTypes: NodeTypeNameFactory::NAME_DOCUMENT)
+        );
+    }
+
+    private function findClosestSite(ContentSubgraphInterface $subgraph, Node $node): ?Node
+    {
+        $nodeType = $this->contentRepositoryRegistry->get($subgraph->getIdentity()->contentRepositoryId)
+            ->getNodeTypeManager()->getNodeType($node->nodeTypeName);
+        if ($nodeType->isOfType(NodeTypeNameFactory::NAME_SITE)) {
+            return $node;
+        }
+        return $subgraph->findClosestNode(
+            $node->nodeAggregateId,
+            FindClosestNodeFilter::create(nodeTypes: NodeTypeNameFactory::NAME_SITE)
+        );
     }
 
     public function canRenderWithNodeAndPath(): bool

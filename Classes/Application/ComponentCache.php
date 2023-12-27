@@ -37,6 +37,7 @@ class ComponentCache implements CacheInterface
     ): ?ComponentInterface {
         $data = $this->get($identifier);
         if (is_string($data)) {
+            /** @var array<mixed> */
             $serialization = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
 
             return $this->componentUnserializer->unserializeComponent(
@@ -51,6 +52,7 @@ class ComponentCache implements CacheInterface
 
     public function get(string $key, mixed $default = null): ?string
     {
+        /** @var string|false $data */
         $data = $this->cache->get($key);
         if (is_string($data)) {
             return $data;
@@ -70,7 +72,7 @@ class ComponentCache implements CacheInterface
                 $key,
                 json_encode($serialization, JSON_THROW_ON_ERROR),
                 $tags ? $tags->toStringArray() : [],
-                $ttl
+                $ttl instanceof \DateInterval ? (new \DateTimeImmutable('@0'))->add($ttl)->getTimestamp() : $ttl
             );
             return true;
         } catch (\InvalidArgumentException $e) {

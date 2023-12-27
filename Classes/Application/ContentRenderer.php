@@ -67,9 +67,9 @@ final class ContentRenderer extends AbstractComponentFactory
 
         if (is_null($component)) {
             $contentCollection = $collectionName
-                ? $runtimeVariables->subgraph->findChildNodeConnectedThroughEdgeName(
+                ? $runtimeVariables->subgraph->findNodeByPath(
+                    $collectionName,
                     $node->nodeAggregateId,
-                    $collectionName
                 ) : $node;
             assert($contentCollection instanceof Node);
             $cacheTags = new CacheTagSet(
@@ -78,7 +78,7 @@ final class ContentRenderer extends AbstractComponentFactory
             );
             $content = new ComponentCollection(... array_map(
                 // We can't use an arrow function here because we need to modify $cacheTags
-                function (Node $childNode) use($runtimeVariables, &$cacheTags): ComponentInterface {
+                function (Node $childNode) use ($runtimeVariables, &$cacheTags): ComponentInterface {
                     return $this->delegate(
                         $childNode,
                         $runtimeVariables,
