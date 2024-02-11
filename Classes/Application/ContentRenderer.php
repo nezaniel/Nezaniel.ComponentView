@@ -58,6 +58,7 @@ final class ContentRenderer extends AbstractComponentFactory
     ): CacheSegment {
         $cacheEntryIdentifier = 'node_' . $node->nodeAggregateId->value
             . '_' . $runtimeVariables->documentNode->subgraphIdentity->contentStreamId->value
+            . '_' . $runtimeVariables->documentNode->subgraphIdentity->dimensionSpacePoint->hash
             . '_' . $runtimeVariables->renderingMode->name . ($collectionName ? '_' . $collectionName->value : '');
 
         $component = $this->componentCache->findComponent(
