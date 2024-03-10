@@ -12,12 +12,16 @@ use Neos\Flow\Annotations as Flow;
 
 /**
  * A collection of self rendering components
+ *
+ * @implements \IteratorAggregate<ComponentInterface|string>
  */
 #[Flow\Proxy(false)]
-final readonly class ComponentCollection extends AbstractComponent implements ComponentContainerInterface
+final readonly class ComponentCollection extends AbstractComponent implements
+    ComponentContainerInterface,
+    \IteratorAggregate
 {
     /**
-     * @var array<int|string,ComponentInterface|string>
+     * @var array<ComponentInterface|string>
      */
     private array $components;
 
@@ -39,5 +43,13 @@ final readonly class ComponentCollection extends AbstractComponent implements Co
     public function render(): string
     {
         return implode('', $this->components);
+    }
+
+    /**
+     * @return \Traversable<ComponentInterface|string>
+     */
+    public function getIterator(): \Traversable
+    {
+        yield from $this->components;
     }
 }
