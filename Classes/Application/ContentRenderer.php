@@ -32,22 +32,26 @@ final class ContentRenderer extends AbstractComponentFactory
         Node $node,
         NodeName $collectionName,
         ComponentViewRuntimeVariables $runtimeVariables,
+        ?string $additionalClasses = null,
     ): CacheSegment {
         return $this->resolveCacheSegmentForContentCollection(
             $node,
             $collectionName,
             $runtimeVariables,
+            $additionalClasses,
         );
     }
 
     public function forContentCollection(
         Node $contentCollection,
-        ComponentViewRuntimeVariables $runtimeVariables
+        ComponentViewRuntimeVariables $runtimeVariables,
+        ?string $additionalClasses = null,
     ): CacheSegment {
         return $this->resolveCacheSegmentForContentCollection(
             $contentCollection,
             null,
             $runtimeVariables,
+            $additionalClasses,
         );
     }
 
@@ -55,6 +59,7 @@ final class ContentRenderer extends AbstractComponentFactory
         Node $node,
         ?NodeName $collectionName,
         ComponentViewRuntimeVariables $runtimeVariables,
+        ?string $additionalClasses = null,
     ): CacheSegment {
         $cacheEntryIdentifier = 'node_' . $node->nodeAggregateId->value
             . '_' . $runtimeVariables->documentNode->subgraphIdentity->contentStreamId->value
@@ -96,7 +101,7 @@ final class ContentRenderer extends AbstractComponentFactory
             }
 
             $component = $runtimeVariables->renderingMode->isEdit
-                ? $this->nodeMetadataWrapperFactory->forNode($contentCollection, $content)
+                ? $this->nodeMetadataWrapperFactory->forNode($contentCollection, $content, $additionalClasses)
                 : $content;
 
             $this->componentCache->set(

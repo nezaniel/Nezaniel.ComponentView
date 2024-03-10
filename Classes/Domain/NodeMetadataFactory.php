@@ -23,8 +23,11 @@ final class NodeMetadataFactory extends ContentElementWrappingService
     /**
      * @return array<string,mixed>|null
      */
-    public function getAugmenterAttributesForContentNode(Node $contentNode, ?RenderingEntryPoint $renderingEntryPoint = null): ?array
-    {
+    public function getAugmenterAttributesForContentNode(
+        Node $contentNode,
+        ?RenderingEntryPoint $renderingEntryPoint = null,
+        ?string $additionalClasses = null
+    ): ?array {
         $contentRepository = $this->contentRepositoryRegistry->get($contentNode->subgraphIdentity->contentRepositoryId);
         $renderingEntryPoint ??= RenderingEntryPoint::forContentRendererDelegation();
 
@@ -36,7 +39,9 @@ final class NodeMetadataFactory extends ContentElementWrappingService
             $contentRepository->getNodeTypeManager()->getNodeType($contentNode->nodeTypeName)
                 ->isOfType(NodeTypeNameFactory::NAME_CONTENT_COLLECTION)
         ) {
-            $attributes['class'] = 'neos-contentcollection';
+            $attributes['class'] = 'neos-contentcollection ' . $additionalClasses;
+        } elseif ($additionalClasses) {
+            $attributes['class'] = $additionalClasses;
         }
 
         return $attributes;

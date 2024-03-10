@@ -25,10 +25,10 @@ final readonly class NodeMetadataWrapperFactory
     ) {
     }
 
-    public function forNode(Node $node, ComponentInterface|string $content): NodeMetadataWrapper
+    public function forNode(Node $node, ComponentInterface|string $content, ?string $additionalClasses = null): NodeMetadataWrapper
     {
         return new NodeMetadataWrapper(
-            $this->nodeMetadataFactory->getAugmenterAttributesForContentNode($node),
+            $this->nodeMetadataFactory->getAugmenterAttributesForContentNode(contentNode: $node, additionalClasses: $additionalClasses),
             $content,
             $this->nodeMetadataFactory->getScriptForContentNode($node)
         );
