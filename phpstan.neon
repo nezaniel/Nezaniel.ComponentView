@@ -2,4 +2,5 @@ parameters:
     level: 9
     paths:
         - Classes
+        - Tests
     checkGenericClassInNonGenericObjectType: false

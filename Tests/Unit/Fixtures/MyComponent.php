@@ -36,6 +36,37 @@ final readonly class MyComponent extends AbstractComponent
 
     public function render(): string
     {
-        return '';
+        return '<dl>
+            <dt>string</dt>
+            <dd>' . $this->string . '</dd>
+            <dt>int</dt>
+            <dd>' . $this->int . '</dd>
+            <dt>float</dt>
+            <dd>' . $this->float . '</dd>
+            <dt>bool</dt>
+            <dd>' . $this->bool . '</dd>
+            <dt>uri</dt>
+            <dd>' . $this->uri . '</dd>
+            <dt>enum</dt>
+            <dd>' . $this->enum->value . '</dd>
+            <dt>content</dt>
+            <dd>' . $this->content . '</dd>
+            <dt>mySubComponents</dt>
+            <dd>' . $this->mySubComponents . '</dd>
+            <dt>myProplessSubComponent</dt>
+            <dd>' . $this->myProplessSubComponent . '</dd>
+            <dt>whatever</dt>
+            <dd>' . $this->whatever . '</dd>
+            <dt>whateverOrNothing</dt>
+            <dd>' . $this->whateverOrNothing . '</dd>
+            <dt>whateverOrString</dt>
+            <dd>' . $this->whateverOrString . '</dd>
+            <dt>anotherWhateverOrString</dt>
+            <dd>' . $this->anotherWhateverOrString . '</dd>
+            <dt>surpriseCollection</dt>
+            <dd>' . $this->surpriseCollection . '</dd>
+            <dt>plannedCollection</dt>
+            <dd>' . $this->plannedCollection . '</dd>
+        </dl>';
     }
 }
