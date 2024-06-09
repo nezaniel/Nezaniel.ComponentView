@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
+use Neos\ContentRepository\Core\NodeType\NodeType;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
@@ -41,5 +42,12 @@ abstract class AbstractComponentFactory
             . ($node->getProperty($propertyName) ?: '')
             . ($block ? '</div>' : '')
         );
+    }
+
+    final protected function getNodeType(Node $node): ?NodeType
+    {
+        return $this->contentRepositoryRegistry->get($node->contentRepositoryId)
+            ->getNodeTypeManager()
+            ->getNodeType($node->nodeTypeName);
     }
 }
