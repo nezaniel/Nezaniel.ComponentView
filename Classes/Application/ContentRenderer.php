@@ -61,9 +61,9 @@ final class ContentRenderer extends AbstractComponentFactory
         ComponentViewRuntimeVariables $runtimeVariables,
         ?string $additionalClasses = null,
     ): CacheSegment {
-        $cacheEntryIdentifier = 'node_' . $node->nodeAggregateId->value
-            . '_' . $runtimeVariables->documentNode->subgraphIdentity->contentStreamId->value
-            . '_' . $runtimeVariables->documentNode->subgraphIdentity->dimensionSpacePoint->hash
+        $cacheEntryIdentifier = 'node_' . $node->aggregateId->value
+            . '_' . $runtimeVariables->subgraph->getWorkspaceName()->value
+            . '_' . $runtimeVariables->subgraph->getDimensionSpacePoint()->hash
             . '_' . $runtimeVariables->renderingMode->name . ($collectionName ? '_' . $collectionName->value : '');
 
         $component = $this->componentCache->findComponent(
@@ -75,7 +75,7 @@ final class ContentRenderer extends AbstractComponentFactory
             $contentCollection = $collectionName
                 ? $runtimeVariables->subgraph->findNodeByPath(
                     $collectionName,
-                    $node->nodeAggregateId,
+                    $node->aggregateId,
                 ) : $node;
             assert($contentCollection instanceof Node);
             $cacheTags = new CacheTagSet(
@@ -92,7 +92,7 @@ final class ContentRenderer extends AbstractComponentFactory
                     );
                 },
                 iterator_to_array($runtimeVariables->subgraph->findChildNodes(
-                    $contentCollection->nodeAggregateId,
+                    $contentCollection->aggregateId,
                     FindChildNodesFilter::create()
                 ))
             ));
@@ -115,7 +115,7 @@ final class ContentRenderer extends AbstractComponentFactory
         return new CacheSegment(
             new CacheDirective(
                 $cacheEntryIdentifier,
-                $node->nodeAggregateId,
+                $node->aggregateId,
                 $collectionName,
                 null
             ),

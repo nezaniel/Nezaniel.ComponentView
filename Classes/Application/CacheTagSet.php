@@ -8,10 +8,10 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
-use Neos\ContentRepository\Core\Factory\ContentRepositoryId;
 use Neos\ContentRepository\Core\NodeType\NodeTypeName;
 use Neos\ContentRepository\Core\NodeType\NodeTypeNames;
-use Neos\ContentRepository\Core\SharedModel\Workspace\ContentStreamId;
+use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
+use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\Flow\Annotations as Flow;
 
 /**
@@ -38,13 +38,13 @@ final class CacheTagSet
 
     public static function forNodeTypeNames(
         ContentRepositoryId $contentRepositoryId,
-        ContentStreamId $contentStreamId,
+        WorkspaceName $workspaceName,
         NodeTypeNames $nodeTypeNames
     ): self {
         return new self(...array_map(
             fn (NodeTypeName $nodeTypeName): CacheTag => CacheTag::forNodeTypeName(
                 $contentRepositoryId,
-                $contentStreamId,
+                $workspaceName,
                 $nodeTypeName
             ),
             iterator_to_array($nodeTypeNames)

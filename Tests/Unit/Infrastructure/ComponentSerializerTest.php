@@ -30,22 +30,29 @@ use PHPUnit\Framework\TestCase;
  */
 final class ComponentSerializerTest extends TestCase
 {
-    private ?ComponentSerializer $subject = null;
+    private ComponentSerializer $subject;
 
-    public function setUp(): void
+    /**
+     * @param array<mixed> $data
+     */
+    public function __construct(?string $name = null, array $data = [], $dataName = '')
     {
-        parent::setUp();
+        parent::__construct($name, $data, $dataName);
         $this->subject = new ComponentSerializer();
     }
 
     /**
      * @dataProvider componentProvider
+     * @param array<string,mixed> $expectedSerialization
      */
     public function testSerializeComponent(ComponentInterface $component, array $expectedSerialization): void
     {
         Assert::assertSame($expectedSerialization, $this->subject->serializeComponent($component));
     }
 
+    /**
+     * @return iterable<string,mixed>
+     */
     public static function componentProvider(): iterable
     {
         yield 'MyProplessSubComponent' => [

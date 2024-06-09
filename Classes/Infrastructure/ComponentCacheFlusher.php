@@ -13,7 +13,7 @@ use Neos\ContentRepository\Core\NodeType\NodeType;
 use Neos\ContentRepository\Core\NodeType\NodeTypeName;
 use Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
-use Neos\ContentRepository\Core\SharedModel\Workspace\ContentStreamId;
+use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Aop\JoinPointInterface;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
@@ -38,24 +38,25 @@ readonly class ComponentCacheFlusher
     {
         /** @var ContentRepository $contentRepository */
         $contentRepository = $joinPoint->getMethodArgument('contentRepository');
-        /** @var ContentStreamId $contentStreamId */
-        $contentStreamId = $joinPoint->getMethodArgument('contentStreamId');
+        /** @var WorkspaceName $workspaceName */
+        $workspaceName = $joinPoint->getMethodArgument('workspaceName');
         /** @var NodeAggregateId $nodeAggregateId */
         $nodeAggregateId = $joinPoint->getMethodArgument('nodeAggregateId');
 
         $cacheTags = [
-            CacheTag::forEverything($contentRepository->id, $contentStreamId),
-            CacheTag::forNodeAggregate($contentRepository->id, $contentStreamId, $nodeAggregateId)
+            CacheTag::forEverything($contentRepository->id, $workspaceName),
+            CacheTag::forNodeAggregate($contentRepository->id, $workspaceName, $nodeAggregateId)
         ];
 
-        $nodeAggregate = $contentRepository->getContentGraph()->findNodeAggregateById($contentStreamId, $nodeAggregateId);
+        $nodeAggregate = $contentRepository->getContentGraph($workspaceName)->findNodeAggregateById($nodeAggregateId);
         if ($nodeAggregate) {
+            $nodeType = $contentRepository->getNodeTypeManager()->getNodeType($nodeAggregate->nodeTypeName);
             foreach (
-                $this->resolveAllSuperTypeNames(
-                    $contentRepository->getNodeTypeManager()->getNodeType($nodeAggregate->nodeTypeName)
-                ) as $nodeTypeName
+                $nodeType
+                    ? $this->resolveAllSuperTypeNames($nodeType)
+                    : [] as $nodeTypeName
             ) {
-                $cacheTags[] = CacheTag::forNodeTypeName($contentRepository->id, $nodeAggregate->contentStreamId, $nodeTypeName);
+                $cacheTags[] = CacheTag::forNodeTypeName($contentRepository->id, $workspaceName, $nodeTypeName);
             }
         }
         $cacheTagsToFlush = new CacheTagSet(...$cacheTags);
@@ -70,12 +71,11 @@ readonly class ComponentCacheFlusher
     private function processAncestors(ContentRepository $contentRepository, NodeAggregate $nodeAggregate): CacheTagSet
     {
         $cacheTagsToFlush = new CacheTagSet(
-            CacheTag::forAncestorNode($contentRepository->id, $nodeAggregate->contentStreamId, $nodeAggregate->nodeAggregateId)
+            CacheTag::forAncestorNode($contentRepository->id, $nodeAggregate->workspaceName, $nodeAggregate->nodeAggregateId)
         );
 
         foreach (
-            $contentRepository->getContentGraph()->findParentNodeAggregates(
-                $nodeAggregate->contentStreamId,
+            $contentRepository->getContentGraph($nodeAggregate->workspaceName)->findParentNodeAggregates(
                 $nodeAggregate->nodeAggregateId
             ) as $parentNodeAggregate
         ) {

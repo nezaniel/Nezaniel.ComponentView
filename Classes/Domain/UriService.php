@@ -58,7 +58,7 @@ final class UriService
     public function getNodeUri(Node $documentNode, bool $absolute = false, ?string $format = null): UriInterface
     {
         $contentRepository = $this->contentRepositoryRegistry->get(
-            $documentNode->subgraphIdentity->contentRepositoryId
+            $documentNode->contentRepositoryId
         );
         $nodeAddressFactory = NodeAddressFactory::create($contentRepository);
         $nodeAddress = $nodeAddressFactory->createFromNode($documentNode);
