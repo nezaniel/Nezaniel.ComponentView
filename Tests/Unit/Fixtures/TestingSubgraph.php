@@ -9,8 +9,10 @@ declare(strict_types=1);
 namespace Nezaniel\ComponentView\Tests\Unit\Fixtures;
 
 use Neos\ContentRepository\Core\DimensionSpace\DimensionSpacePoint;
+use Neos\ContentRepository\Core\Factory\ContentRepositoryId;
 use Neos\ContentRepository\Core\NodeType\NodeTypeName;
 use Neos\ContentRepository\Core\Projection\ContentGraph\AbsoluteNodePath;
+use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphIdentity;
 use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Filter;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
@@ -19,10 +21,9 @@ use Neos\ContentRepository\Core\Projection\ContentGraph\Nodes;
 use Neos\ContentRepository\Core\Projection\ContentGraph\References;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Subtree;
 use Neos\ContentRepository\Core\Projection\ContentGraph\VisibilityConstraints;
-use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeName;
-use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
+use Neos\ContentRepository\Core\SharedModel\Workspace\ContentStreamId;
 
 final class TestingSubgraph implements ContentSubgraphInterface
 {
@@ -58,6 +59,13 @@ final class TestingSubgraph implements ContentSubgraphInterface
         Filter\FindPrecedingSiblingNodesFilter $filter
     ): Nodes {
         return Nodes::createEmpty();
+    }
+
+    public function findChildNodeConnectedThroughEdgeName(
+        NodeAggregateId $parentNodeAggregateId,
+        NodeName $edgeName
+    ): ?Node {
+        return null;
     }
 
     public function findDescendantNodes(
@@ -101,7 +109,7 @@ final class TestingSubgraph implements ContentSubgraphInterface
         return 0;
     }
 
-    public function findNodeByPath(NodePath|NodeName $path, NodeAggregateId $startingNodeAggregateId): ?Node
+    public function findNodeByPath(NodePath $path, NodeAggregateId $startingNodeAggregateId): ?Node
     {
         return null;
     }
@@ -125,6 +133,16 @@ final class TestingSubgraph implements ContentSubgraphInterface
     public function jsonSerialize(): array
     {
         return [];
+    }
+
+    public function getIdentity(): ContentSubgraphIdentity
+    {
+        return ContentSubgraphIdentity::create(
+            ContentRepositoryId::fromString('default'),
+            ContentStreamId::fromString('cs-id'),
+            DimensionSpacePoint::fromArray([]),
+            VisibilityConstraints::withoutRestrictions()
+        );
     }
 
     public function findRootNodeByType(NodeTypeName $nodeTypeName): ?Node
@@ -154,25 +172,5 @@ final class TestingSubgraph implements ContentSubgraphInterface
     public function findNodeByAbsolutePath(AbsoluteNodePath $path): ?Node
     {
         return null;
-    }
-
-    public function getContentRepositoryId(): ContentRepositoryId
-    {
-        return ContentRepositoryId::fromString('default');
-    }
-
-    public function getWorkspaceName(): WorkspaceName
-    {
-        return WorkspaceName::forLive();
-    }
-
-    public function getDimensionSpacePoint(): DimensionSpacePoint
-    {
-        return DimensionSpacePoint::createWithoutDimensions();
-    }
-
-    public function getVisibilityConstraints(): VisibilityConstraints
-    {
-        return VisibilityConstraints::withoutRestrictions();
     }
 }

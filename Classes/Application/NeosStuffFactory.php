@@ -35,22 +35,19 @@ final class NeosStuffFactory extends AbstractComponentFactory
             'metaData' => [
                 'documentNode' => $this->nodeInfoHelper->serializedNodeAddress($runtimeVariables->documentNode),
                 'siteNode' => $this->nodeInfoHelper->serializedNodeAddress($runtimeVariables->siteNode),
-                'previewUrl' => $this->nodeInfoHelper->createRedirectToNode(
-                    $runtimeVariables->documentNode,
-                    $this->uriService->getControllerContext()->getRequest()
-                ),
+                'previewUrl' => $this->nodeInfoHelper->createRedirectToNode($runtimeVariables->documentNode, $this->uriService->getControllerContext()),
                 'contentDimensions' => [
                     'active' => $this->contentDimensionsHelper->dimensionSpacePointArray(
-                        $runtimeVariables->subgraph->getDimensionSpacePoint()
+                        $runtimeVariables->documentNode->subgraphIdentity->dimensionSpacePoint
                     ),
                     'allowedPresets' => $this->contentDimensionsHelper->allowedPresetsByName(
-                        $runtimeVariables->subgraph->getDimensionSpacePoint(),
-                        $runtimeVariables->subgraph->getContentRepositoryId()
+                        $runtimeVariables->documentNode->subgraphIdentity->dimensionSpacePoint,
+                        $runtimeVariables->documentNode->subgraphIdentity->contentRepositoryId
                     ) ?: new \stdClass()
                 ],
                 'documentNodeSerialization' => $this->nodeInfoHelper->renderNodeWithPropertiesAndChildrenInformation(
                     $runtimeVariables->documentNode,
-                    $this->uriService->getControllerContext()->getRequest()
+                    $this->uriService->getControllerContext()
                 )
             ]
         ];

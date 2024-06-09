@@ -8,11 +8,11 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
+use Neos\ContentRepository\Core\Factory\ContentRepositoryId;
 use Neos\ContentRepository\Core\NodeType\NodeTypeName;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
-use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
-use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
+use Neos\ContentRepository\Core\SharedModel\Workspace\ContentStreamId;
 use Neos\Flow\Annotations as Flow;
 
 /**
@@ -30,24 +30,24 @@ class CacheTag
 
     final public static function forEverything(
         ?ContentRepositoryId $contentRepositoryId,
-        ?WorkspaceName $workspaceName,
+        ?ContentStreamId $contentStreamId,
     ): self {
         return new self(
             'Everything'
             . self::renderContentRepositoryPrefix($contentRepositoryId)
-            . self::renderWorkspacePrefix($workspaceName)
+            . self::renderContentStreamPrefix($contentStreamId)
         );
     }
 
     final public static function forNodeAggregate(
         ContentRepositoryId $contentRepositoryId,
-        ?WorkspaceName $workspaceName,
+        ?ContentStreamId $contentStreamId,
         NodeAggregateId $nodeAggregateId,
     ): self {
         return new self(
             'NodeAggregate'
             . self::renderContentRepositoryPrefix($contentRepositoryId)
-            . self::renderWorkspacePrefix($workspaceName)
+            . self::renderContentStreamPrefix($contentStreamId)
             . '_' . $nodeAggregateId->value
         );
     }
@@ -55,21 +55,21 @@ class CacheTag
     final public static function forNodeAggregateFromNode(Node $node): self
     {
         return self::forNodeAggregate(
-            $node->contentRepositoryId,
-            $node->workspaceName,
-            $node->aggregateId
+            $node->subgraphIdentity->contentRepositoryId,
+            $node->subgraphIdentity->contentStreamId,
+            $node->nodeAggregateId
         );
     }
 
     final public static function forAncestorNode(
         ContentRepositoryId $contentRepositoryId,
-        ?WorkspaceName $workspaceName,
+        ?ContentStreamId $contentStreamId,
         NodeAggregateId $nodeAggregateId,
     ): self {
         return new self(
             'Ancestor'
             . self::renderContentRepositoryPrefix($contentRepositoryId)
-            . self::renderWorkspacePrefix($workspaceName)
+            . self::renderContentStreamPrefix($contentStreamId)
             . '_' . $nodeAggregateId->value
         );
     }
@@ -77,32 +77,32 @@ class CacheTag
     final public static function forAncestorNodeFromNode(Node $node): self
     {
         return self::forAncestorNode(
-            $node->contentRepositoryId,
-            $node->workspaceName,
-            $node->aggregateId
+            $node->subgraphIdentity->contentRepositoryId,
+            $node->subgraphIdentity->contentStreamId,
+            $node->nodeAggregateId
         );
     }
 
     final public static function forNodeTypeName(
         ContentRepositoryId $contentRepositoryId,
-        ?WorkspaceName $workspaceName,
+        ?ContentStreamId $contentStreamId,
         NodeTypeName $nodeTypeName,
     ): self {
         return new self(
             'NodeType'
             . self::renderContentRepositoryPrefix($contentRepositoryId)
-            . self::renderWorkspacePrefix($workspaceName)
+            . self::renderContentStreamPrefix($contentStreamId)
             . '_' . \strtr($nodeTypeName->value, '.:', '_-')
         );
     }
 
     final public static function forAsset(
         string $assetIdentifier,
-        ?WorkspaceName $workspaceName = null,
+        ?ContentStreamId $contentStreamId = null,
     ): self {
         return new self(
             'Asset'
-            . self::renderWorkspacePrefix($workspaceName)
+            . self::renderContentStreamPrefix($contentStreamId)
             . '_' . $assetIdentifier
         );
     }
@@ -119,9 +119,9 @@ class CacheTag
         return new self($string);
     }
 
-    private static function renderWorkspacePrefix(?WorkspaceName $workspaceName): string
+    private static function renderContentStreamPrefix(?ContentStreamId $contentStreamId): string
     {
-        return $workspaceName ? '_%' . $workspaceName->value . '%' : '';
+        return $contentStreamId ? '_%' . $contentStreamId->value . '%' : '';
     }
 
     private static function renderContentRepositoryPrefix(?ContentRepositoryId $contentRepositoryId): string

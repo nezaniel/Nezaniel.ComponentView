@@ -28,7 +28,7 @@ final class NodeMetadataFactory extends ContentElementWrappingService
         ?RenderingEntryPoint $renderingEntryPoint = null,
         ?string $additionalClasses = null
     ): ?array {
-        $contentRepository = $this->contentRepositoryRegistry->get($contentNode->contentRepositoryId);
+        $contentRepository = $this->contentRepositoryRegistry->get($contentNode->subgraphIdentity->contentRepositoryId);
         $renderingEntryPoint ??= RenderingEntryPoint::forContentRendererDelegation();
 
         $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromNode($contentNode);
@@ -37,7 +37,7 @@ final class NodeMetadataFactory extends ContentElementWrappingService
         $attributes['data-__neos-node-contextpath'] = $nodeAddress->serializeForUri();
         if (
             $contentRepository->getNodeTypeManager()->getNodeType($contentNode->nodeTypeName)
-                ?->isOfType(NodeTypeNameFactory::NAME_CONTENT_COLLECTION)
+                ->isOfType(NodeTypeNameFactory::NAME_CONTENT_COLLECTION)
         ) {
             $attributes['class'] = 'neos-contentcollection ' . $additionalClasses;
         } elseif ($additionalClasses) {
@@ -49,11 +49,9 @@ final class NodeMetadataFactory extends ContentElementWrappingService
 
     public function getScriptForContentNode(Node $contentNode): string
     {
-        $contentRepository = $this->contentRepositoryRegistry->get($contentNode->contentRepositoryId);
+        $contentRepository = $this->contentRepositoryRegistry->get($contentNode->subgraphIdentity->contentRepositoryId);
         $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromNode($contentNode);
-
-        // TODO illegal dependency on ui
-        $serializedNode = json_encode($this->nodeInfoHelper->renderNodeWithPropertiesAndChildrenInformation($contentNode));
+        $serializedNode = json_encode($this->nodeInfoHelper->renderNode($contentNode));
 
         return "<script data-neos-nodedata>(function(){(this['@Neos.Neos.Ui:Nodes'] = this['@Neos.Neos.Ui:Nodes'] || {})['{$nodeAddress->serializeForUri()}'] = {$serializedNode}})()</script>";
     }
@@ -63,8 +61,8 @@ final class NodeMetadataFactory extends ContentElementWrappingService
      */
     public function forDocumentNode(Node $documentNode, ?string $locator = null, ?Node $siteNode = null): ?array
     {
-        $contentRepository = $this->contentRepositoryRegistry->get($documentNode->contentRepositoryId);
-        $locator = is_string($locator) ? $locator : '/<Neos.Neos:Document>/' . $documentNode->aggregateId->value;
+        $contentRepository = $this->contentRepositoryRegistry->get($documentNode->subgraphIdentity->contentRepositoryId);
+        $locator = is_string($locator) ? $locator : '/<Neos.Neos:Document>/' . $documentNode->nodeAggregateId->value;
 
         $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromNode($documentNode);
         $metadata['data-__neos-node-contextpath'] = $nodeAddress->serializeForUri();
