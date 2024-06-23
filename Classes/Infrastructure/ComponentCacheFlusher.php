@@ -13,7 +13,7 @@ use Neos\ContentRepository\Core\NodeType\NodeType;
 use Neos\ContentRepository\Core\NodeType\NodeTypeName;
 use Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
-use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
+use Neos\ContentRepository\Core\SharedModel\Workspace\ContentStreamId;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Aop\JoinPointInterface;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
@@ -38,8 +38,13 @@ readonly class ComponentCacheFlusher
     {
         /** @var ContentRepository $contentRepository */
         $contentRepository = $joinPoint->getMethodArgument('contentRepository');
-        /** @var WorkspaceName $workspaceName */
-        $workspaceName = $joinPoint->getMethodArgument('workspaceName');
+        /** @var ContentStreamId $contentStreamId */
+        $contentStreamId = $joinPoint->getMethodArgument('contentStreamId');
+        $workspace = $contentRepository->getWorkspaceFinder()->findOneByCurrentContentStreamId($contentStreamId);
+        if (!$workspace) {
+            return;
+        }
+        $workspaceName = $workspace->workspaceName;
         /** @var NodeAggregateId $nodeAggregateId */
         $nodeAggregateId = $joinPoint->getMethodArgument('nodeAggregateId');
 
@@ -70,19 +75,24 @@ readonly class ComponentCacheFlusher
 
     private function processAncestors(ContentRepository $contentRepository, NodeAggregate $nodeAggregate): CacheTagSet
     {
-        $cacheTagsToFlush = new CacheTagSet(
-            CacheTag::forAncestorNode($contentRepository->id, $nodeAggregate->workspaceName, $nodeAggregate->nodeAggregateId)
-        );
+        $workspace = $contentRepository->getWorkspaceFinder()->findOneByCurrentContentStreamId($nodeAggregate->contentStreamId);
+        if ($workspace) {
+            $cacheTagsToFlush = new CacheTagSet(
+                CacheTag::forAncestorNode($contentRepository->id, $workspace->workspaceName, $nodeAggregate->nodeAggregateId)
+            );
 
-        foreach (
-            $contentRepository->getContentGraph($nodeAggregate->workspaceName)->findParentNodeAggregates(
-                $nodeAggregate->nodeAggregateId
-            ) as $parentNodeAggregate
-        ) {
-            $cacheTagsToFlush = $cacheTagsToFlush->union($this->processAncestors($contentRepository, $parentNodeAggregate));
+            foreach (
+                $contentRepository->getContentGraph($workspace->workspaceName)->findParentNodeAggregates(
+                    $nodeAggregate->nodeAggregateId
+                ) as $parentNodeAggregate
+            ) {
+                $cacheTagsToFlush = $cacheTagsToFlush->union($this->processAncestors($contentRepository, $parentNodeAggregate));
+            }
+
+            return $cacheTagsToFlush;
+        } else {
+            return new CacheTagSet();
         }
-
-        return $cacheTagsToFlush;
     }
 
     public function registerAssetChange(AssetInterface $asset): void
