@@ -12,6 +12,7 @@ use Neos\ContentRepository\Core\NodeType\NodeType;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
+use Neos\Neos\Domain\NodeLabel\NodeLabelGeneratorInterface;
 use Neos\Neos\Service\ContentElementEditableService;
 use Nezaniel\ComponentView\Domain\UriService;
 
@@ -33,6 +34,9 @@ abstract class AbstractComponentFactory
     #[Flow\Inject]
     protected ContentRepositoryRegistry $contentRepositoryRegistry;
 
+    #[Flow\Inject]
+    protected NodeLabelGeneratorInterface $nodeLabelGenerator;
+
     final protected function getEditableProperty(Node $node, string $propertyName, bool $block = false): string
     {
         return $this->contentElementEditableService->wrapContentProperty(
@@ -49,5 +53,10 @@ abstract class AbstractComponentFactory
         return $this->contentRepositoryRegistry->get($node->contentRepositoryId)
             ->getNodeTypeManager()
             ->getNodeType($node->nodeTypeName);
+    }
+
+    final protected function getNodeLabel(Node $node): string
+    {
+        return $this->nodeLabelGenerator->getLabel($node);
     }
 }

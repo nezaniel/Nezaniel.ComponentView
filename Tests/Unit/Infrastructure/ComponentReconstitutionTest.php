@@ -68,28 +68,26 @@ final class ComponentReconstitutionTest extends TestCase
         $this->unserializer = new ComponentUnserializer();
         $this->subgraph = new TestingSubgraph();
         $this->dummyNode = Node::create(
-            ContentRepositoryId::fromString('default'),
-            WorkspaceName::forLive(),
-            DimensionSpacePoint::createWithoutDimensions(),
-            NodeAggregateId::fromString('nody-mc-nodeface'),
-            OriginDimensionSpacePoint::fromArray([]),
-            NodeAggregateClassification::CLASSIFICATION_REGULAR,
-            NodeTypeName::fromString('Nezaniel.ComponentView.Testing:Node'),
-            new PropertyCollection(
+            contentRepositoryId: ContentRepositoryId::fromString('default'),
+            workspaceName: WorkspaceName::forLive(),
+            dimensionSpacePoint: DimensionSpacePoint::createWithoutDimensions(),
+            aggregateId: NodeAggregateId::fromString('nody-mc-nodeface'),
+            originDimensionSpacePoint: OriginDimensionSpacePoint::fromArray([]),
+            classification: NodeAggregateClassification::CLASSIFICATION_REGULAR,
+            nodeTypeName: NodeTypeName::fromString('Nezaniel.ComponentView.Testing:Node'),
+            properties: new PropertyCollection(
                 SerializedPropertyValues::fromArray([]),
                 new PropertyConverter(new Serializer())
             ),
-            null,
-            NodeTags::createEmpty(),
-            Timestamps::create(
+            name: null,
+            tags: NodeTags::createEmpty(),
+            timestamps: Timestamps::create(
                 new \DateTimeImmutable(),
                 new \DateTimeImmutable(),
                 new \DateTimeImmutable(),
                 new \DateTimeImmutable(),
             ),
-            VisibilityConstraints::withoutRestrictions(),
-            null,
-            ContentStreamId::fromString('cs-id')
+            visibilityConstraints: VisibilityConstraints::withoutRestrictions(),
         );
         $this->cache = new ComponentCache(
             new StringFrontend(

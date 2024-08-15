@@ -12,6 +12,7 @@ use GuzzleHttp\Psr7\Uri;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeName;
+use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
 use Nezaniel\ComponentView\Application\CacheTagSet;
 use Nezaniel\ComponentView\Application\ComponentCache;
@@ -32,6 +33,9 @@ class ComponentUnserializer
 {
     #[Flow\Inject]
     protected ContentRenderer $contentRenderer;
+
+    #[Flow\Inject]
+    protected ContentRepositoryRegistry $contentRepositoryRegistry;
 
     /** @phpstan-ignore-next-line We can't declare recursive array types */
     public function unserializeComponent(
@@ -217,7 +221,12 @@ class ComponentUnserializer
                     $cacheDirective->nodeName,
                     $runtimeVariables
                 );
-            } elseif ($node->nodeType?->isOfType('Neos.Neos:ContentCollection')) {
+            } elseif (
+                $this->contentRepositoryRegistry->get($node->contentRepositoryId)
+                    ->getNodeTypeManager()
+                    ->getNodeType($node->nodeTypeName)
+                    ?->isOfType('Neos.Neos:ContentCollection')
+            ) {
                 return $this->contentRenderer->forContentCollection($node, $runtimeVariables);
             }
             $cacheTags = new CacheTagSet();
