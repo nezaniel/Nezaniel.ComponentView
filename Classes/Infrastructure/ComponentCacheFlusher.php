@@ -1,24 +1,20 @@
 <?php
 
-/*
- * This file is part of the Nezaniel.ComponentView package.
- */
-
 declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Infrastructure;
 
-use Neos\ContentRepository\Core\ContentRepository;
 use Neos\ContentRepository\Core\NodeType\NodeType;
 use Neos\ContentRepository\Core\NodeType\NodeTypeName;
-use Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
-use Neos\ContentRepository\Core\SharedModel\Workspace\ContentStreamId;
+use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Aop\JoinPointInterface;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
 use Neos\Media\Domain\Model\AssetInterface;
 use Neos\Media\Domain\Model\AssetVariantInterface;
+use Neos\Neos\Fusion\Cache\FlushNodeAggregateRequest;
+use Neos\Neos\Fusion\Cache\FlushWorkspaceRequest;
 use Nezaniel\ComponentView\Application\CacheTag;
 use Nezaniel\ComponentView\Application\CacheTagSet;
 use Nezaniel\ComponentView\Application\ComponentCache;
@@ -30,30 +26,42 @@ readonly class ComponentCacheFlusher
     public function __construct(
         private ComponentCache $cache,
         private PersistenceManagerInterface $persistenceManager,
+        private ContentRepositoryRegistry $contentRepositoryRegistry,
     ) {
+    }
+
+    #[Flow\Around('method(Neos\Neos\Fusion\Cache\ContentCacheFlusher->flushNodeAggregate())')]
+    public function flushWorkspace(JoinPointInterface $joinPoint): void
+    {
+        /** @var FlushWorkspaceRequest $flushWorkspaceRequest */
+        $flushWorkspaceRequest = $joinPoint->getMethodArgument('flushWorkspaceRequest');
+
+        $cacheTags = new CacheTagSet(
+            CacheTag::forEverything(null, null),
+            CacheTag::forEverything($flushWorkspaceRequest->contentRepositoryId, $flushWorkspaceRequest->workspaceName),
+        );
+
+        $this->cache->clearByTags($cacheTags);
     }
 
     #[Flow\Around('method(Neos\Neos\Fusion\Cache\ContentCacheFlusher->flushNodeAggregate())')]
     public function flushNodeAggregate(JoinPointInterface $joinPoint): void
     {
-        /** @var ContentRepository $contentRepository */
-        $contentRepository = $joinPoint->getMethodArgument('contentRepository');
-        /** @var ContentStreamId $contentStreamId */
-        $contentStreamId = $joinPoint->getMethodArgument('contentStreamId');
-        $workspace = $contentRepository->getWorkspaceFinder()->findOneByCurrentContentStreamId($contentStreamId);
-        if (!$workspace) {
-            return;
-        }
-        $workspaceName = $workspace->workspaceName;
-        /** @var NodeAggregateId $nodeAggregateId */
-        $nodeAggregateId = $joinPoint->getMethodArgument('nodeAggregateId');
+        /** @var FlushNodeAggregateRequest $flushNodeAggregateRequest */
+        $flushNodeAggregateRequest = $joinPoint->getMethodArgument('flushNodeAggregateRequest');
 
         $cacheTags = [
-            CacheTag::forEverything($contentRepository->id, $workspaceName),
-            CacheTag::forNodeAggregate($contentRepository->id, $workspaceName, $nodeAggregateId)
+            CacheTag::forEverything(null, null),
+            CacheTag::forEverything($flushNodeAggregateRequest->contentRepositoryId, $flushNodeAggregateRequest->workspaceName),
+            CacheTag::forNodeAggregate($flushNodeAggregateRequest->contentRepositoryId, $flushNodeAggregateRequest->workspaceName, $flushNodeAggregateRequest->nodeAggregateId)
         ];
+        $cacheTags = array_merge($cacheTags, array_map(
+            fn (NodeAggregateId $ancestorAggregateId): CacheTag => CacheTag::forNodeAggregate($flushNodeAggregateRequest->contentRepositoryId, $flushNodeAggregateRequest->workspaceName, $ancestorAggregateId),
+            iterator_to_array($flushNodeAggregateRequest->parentNodeAggregateIds),
+        ));
 
-        $nodeAggregate = $contentRepository->getContentGraph($workspaceName)->findNodeAggregateById($nodeAggregateId);
+        $contentRepository = $this->contentRepositoryRegistry->get($flushNodeAggregateRequest->contentRepositoryId);
+        $nodeAggregate = $contentRepository->getContentGraph($flushNodeAggregateRequest->workspaceName)->findNodeAggregateById($flushNodeAggregateRequest->nodeAggregateId);
         if ($nodeAggregate) {
             $nodeType = $contentRepository->getNodeTypeManager()->getNodeType($nodeAggregate->nodeTypeName);
             foreach (
@@ -61,38 +69,11 @@ readonly class ComponentCacheFlusher
                     ? $this->resolveAllSuperTypeNames($nodeType)
                     : [] as $nodeTypeName
             ) {
-                $cacheTags[] = CacheTag::forNodeTypeName($contentRepository->id, $workspaceName, $nodeTypeName);
+                $cacheTags[] = CacheTag::forNodeTypeName($contentRepository->id, $flushNodeAggregateRequest->workspaceName, $nodeTypeName);
             }
         }
-        $cacheTagsToFlush = new CacheTagSet(...$cacheTags);
 
-        if ($nodeAggregate) {
-            $cacheTagsToFlush = $cacheTagsToFlush->union($this->processAncestors($contentRepository, $nodeAggregate));
-        }
-
-        $this->cache->clearByTags($cacheTagsToFlush);
-    }
-
-    private function processAncestors(ContentRepository $contentRepository, NodeAggregate $nodeAggregate): CacheTagSet
-    {
-        $workspace = $contentRepository->getWorkspaceFinder()->findOneByCurrentContentStreamId($nodeAggregate->contentStreamId);
-        if ($workspace) {
-            $cacheTagsToFlush = new CacheTagSet(
-                CacheTag::forAncestorNode($contentRepository->id, $workspace->workspaceName, $nodeAggregate->nodeAggregateId)
-            );
-
-            foreach (
-                $contentRepository->getContentGraph($workspace->workspaceName)->findParentNodeAggregates(
-                    $nodeAggregate->nodeAggregateId
-                ) as $parentNodeAggregate
-            ) {
-                $cacheTagsToFlush = $cacheTagsToFlush->union($this->processAncestors($contentRepository, $parentNodeAggregate));
-            }
-
-            return $cacheTagsToFlush;
-        } else {
-            return new CacheTagSet();
-        }
+        $this->cache->clearByTags(new CacheTagSet(...$cacheTags));
     }
 
     public function registerAssetChange(AssetInterface $asset): void

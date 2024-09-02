@@ -33,7 +33,7 @@ final class NodeMetadataFactory extends ContentElementWrappingService
 
         $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromNode($contentNode);
 
-        $attributes['data-__neos-fusion-path'] = $renderingEntryPoint->serializeForNeosUi();
+        $attributes['data-__neos-fusion-path'] = $renderingEntryPoint->serializeForNeosUi($contentNode);
         $attributes['data-__neos-node-contextpath'] = $nodeAddress->serializeForUri();
         if (
             $contentRepository->getNodeTypeManager()->getNodeType($contentNode->nodeTypeName)

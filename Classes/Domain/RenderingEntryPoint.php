@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Domain;
 
+use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\Flow\Annotations as Flow;
 use Nezaniel\ComponentView\Application\ContentRenderer;
 
@@ -71,8 +72,8 @@ final class RenderingEntryPoint
         return $this->className . self::SEPARATOR . $this->methodName;
     }
 
-    public function serializeForNeosUi(): string
+    public function serializeForNeosUi(Node $node): string
     {
-        return \str_replace('\\', '.', $this->className) . '/' . $this->methodName;
+        return \str_replace('\\', '.', $this->className) . '/' . $this->methodName . '/' . $node->aggregateId->value;
     }
 }

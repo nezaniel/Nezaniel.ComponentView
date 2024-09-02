@@ -1,6 +1,6 @@
 {
     "name": "nezaniel/componentview",
-    "type": "neos-nezaniel",
+    "type": "neos-package",
     "description": "A view based on self-rendering presentational components for Neos CMS",
     "require": {
         "neos/neos": "^9.0",

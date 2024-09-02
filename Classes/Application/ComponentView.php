@@ -125,7 +125,10 @@ class ComponentView extends AbstractView implements OutOfBandRenderingCapable
                 if ($nodeType?->isOfType(NodeTypeNameFactory::NAME_CONTENT_COLLECTION)) {
                     $component = $factory->forContentCollection($this->node, $runtimeVariables);
                 } else {
-                    $cacheTags = new CacheTagSet();
+                    $cacheTags = new CacheTagSet(
+                        CacheTag::forEverything(null, null),
+                        CacheTag::forEverything($subgraph->getContentRepositoryId(), $subgraph->getWorkspaceName()),
+                    );
                     $component = $factory->delegate($this->node, $runtimeVariables, $cacheTags);
                 }
             } else {
