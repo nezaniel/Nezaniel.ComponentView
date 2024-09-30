@@ -16,6 +16,8 @@ use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAddress;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
+use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
+use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\Controller\ControllerContext;
 use Neos\Flow\ResourceManagement\PersistentResource;
@@ -25,6 +27,8 @@ use Neos\Media\Domain\Model\AssetInterface;
 use Neos\Media\Domain\Repository\AssetRepository;
 use Neos\Flow\Mvc;
 use Neos\Flow\Core\Bootstrap;
+use Neos\Neos\FrontendRouting\NodeAddress as LegacyNodeAddress;
+use Neos\Neos\FrontendRouting\NodeAddressFactory;
 use Neos\Neos\FrontendRouting\NodeUriBuilderFactory;
 use Neos\Neos\FrontendRouting\Options;
 use Psr\Http\Message\UriInterface;
@@ -47,6 +51,9 @@ final class UriService
     #[Flow\Inject]
     protected NodeUriBuilderFactory $nodeUriBuilderFactory;
 
+    #[Flow\Inject]
+    protected ContentRepositoryRegistry $contentRepositoryRegistry;
+
     protected ?ControllerContext $controllerContext = null;
 
     public function setControllerContext(ControllerContext $controllerContext): void
@@ -65,6 +72,34 @@ final class UriService
         }
         return $this->nodeUriBuilderFactory->forActionRequest($this->getControllerContext()->getRequest())
             ->uriFor(NodeAddress::fromNode($documentNode), $options);
+    }
+
+    public function getBackendNodeUri(Node $documentNode, WorkspaceName $workspaceName, bool $absolute = false, ?string $format = null): UriInterface
+    {
+        $uriBuilder = clone $this->controllerContext->getUriBuilder();
+        $uriBuilder->reset();
+        $uriBuilder->setCreateAbsoluteUri($absolute);
+        $uriBuilder->setFormat($format ?: $this->controllerContext->getUriBuilder()->getFormat());
+
+        $nodeAddressFactory = NodeAddressFactory::create($this->contentRepositoryRegistry->get($documentNode->contentRepositoryId));
+        $nodeAddress = $nodeAddressFactory->createFromNode($documentNode);
+        $nodeAddress = new LegacyNodeAddress(
+            null,
+            $nodeAddress->dimensionSpacePoint,
+            $nodeAddress->nodeAggregateId,
+            $workspaceName
+        );
+
+        return new Uri(
+            $uriBuilder->uriFor(
+                'index',
+                [
+                    'node' => $nodeAddress->serializeForUri(),
+                ],
+                'Backend',
+                'Neos.Neos.Ui',
+            )
+        );
     }
 
     public function getResourceUri(string $packageKey, string $resourcePath): Uri
