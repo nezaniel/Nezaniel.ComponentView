@@ -47,17 +47,6 @@ final class NodeMetadataFactory extends ContentElementWrappingService
         return $attributes;
     }
 
-    public function getScriptForContentNode(Node $contentNode): string
-    {
-        $contentRepository = $this->contentRepositoryRegistry->get($contentNode->contentRepositoryId);
-        $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromNode($contentNode);
-
-        // TODO illegal dependency on ui
-        $serializedNode = json_encode($this->nodeInfoHelper->renderNodeWithPropertiesAndChildrenInformation($contentNode));
-
-        return "<script data-neos-nodedata>(function(){(this['@Neos.Neos.Ui:Nodes'] = this['@Neos.Neos.Ui:Nodes'] || {})['{$nodeAddress->serializeForUri()}'] = {$serializedNode}})()</script>";
-    }
-
     /**
      * @return array<string,mixed>
      */
@@ -69,7 +58,6 @@ final class NodeMetadataFactory extends ContentElementWrappingService
         $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromNode($documentNode);
         $metadata['data-__neos-node-contextpath'] = $nodeAddress->serializeForUri();
         $metadata['data-__neos-fusion-path'] = $locator;
-        $metadata = $this->addCssClasses($metadata, $documentNode);
 
         return $metadata;
     }

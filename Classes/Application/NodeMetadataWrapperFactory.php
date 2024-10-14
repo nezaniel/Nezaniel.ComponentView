@@ -30,7 +30,6 @@ final readonly class NodeMetadataWrapperFactory
         return new NodeMetadataWrapper(
             $this->nodeMetadataFactory->getAugmenterAttributesForContentNode(contentNode: $node, additionalClasses: $additionalClasses),
             $content,
-            $this->nodeMetadataFactory->getScriptForContentNode($node)
         );
     }
 }

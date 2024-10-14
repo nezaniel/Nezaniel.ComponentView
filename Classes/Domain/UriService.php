@@ -76,6 +76,12 @@ final class UriService
 
     public function getBackendNodeUri(Node $documentNode, WorkspaceName $workspaceName, bool $absolute = false, ?string $format = null): UriInterface
     {
+        if (!$this->controllerContext) {
+            throw new \RuntimeException(
+                'ControllerContext uninitialized, do so via setControllerContext',
+                1728935668
+            );
+        }
         $uriBuilder = clone $this->controllerContext->getUriBuilder();
         $uriBuilder->reset();
         $uriBuilder->setCreateAbsoluteUri($absolute);

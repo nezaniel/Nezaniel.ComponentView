@@ -21,7 +21,6 @@ final readonly class NodeMetadataWrapper extends AbstractComponent
     public function __construct(
         private ?array $attributes,
         private ComponentInterface|string $content,
-        private ?string $script
     ) {
     }
 
@@ -31,7 +30,7 @@ final readonly class NodeMetadataWrapper extends AbstractComponent
         if (is_array($this->attributes)) {
             // @todo: replace by own implementation to decouple from Fusion
             $augmenter = new HtmlAugmenter();
-            return $augmenter->addAttributes($result, $this->attributes) . $this->script;
+            return $augmenter->addAttributes($result, $this->attributes);
         }
 
         return $result;

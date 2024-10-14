@@ -126,7 +126,6 @@ final class ComponentSerializerTest extends TestCase
                     'data-wat' => 'whatever'
                 ],
                 new MySubComponent('my text'),
-                null
             ),
             [
                 '__class' => NodeMetadataWrapper::class,
@@ -312,7 +311,6 @@ final class ComponentSerializerTest extends TestCase
                         'data-wat' => 'whatever'
                     ],
                     new MySubComponent('my text'),
-                    null
                 )
             ),
             [
