@@ -30,7 +30,8 @@ final readonly class NodeMetadataWrapper extends AbstractComponent
         if (is_array($this->attributes)) {
             // @todo: replace by own implementation to decouple from Fusion
             $augmenter = new HtmlAugmenter();
-            return $augmenter->addAttributes($result, $this->attributes);
+            $result = $augmenter->addAttributes($result, $this->attributes, exclusiveAttributes: array_keys($this->attributes));
+            return $result;
         }
 
         return $result;

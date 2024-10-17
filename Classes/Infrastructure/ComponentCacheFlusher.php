@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Infrastructure;
 
-use Neos\ContentRepository\Core\ContentRepository;
 use Neos\ContentRepository\Core\NodeType\NodeType;
 use Neos\ContentRepository\Core\NodeType\NodeTypeName;
-use Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
-use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Aop\JoinPointInterface;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
 use Neos\Media\Domain\Model\AssetInterface;
 use Neos\Media\Domain\Model\AssetVariantInterface;
+use Neos\Neos\Fusion\Cache\CacheFlushingStrategy;
+use Neos\Neos\Fusion\Cache\FlushNodeAggregateRequest;
+use Neos\Neos\Fusion\Cache\FlushWorkspaceRequest;
 use Nezaniel\ComponentView\Application\CacheTag;
 use Nezaniel\ComponentView\Application\CacheTagSet;
 use Nezaniel\ComponentView\Application\ComponentCache;
@@ -31,29 +31,56 @@ readonly class ComponentCacheFlusher
     ) {
     }
 
-    #[Flow\Around('method(Neos\Neos\Fusion\Cache\ContentCacheFlusher->flushNodeAggregate())')]
-    public function flushNodeAggregate(JoinPointInterface $joinPoint): void
+    #[Flow\Around('method(Neos\Neos\Fusion\Cache\ContentCacheFlusher->flushWorkspace())')]
+    public function flushWorkspace(JoinPointInterface $joinPoint): void
     {
-        /** @var ContentRepository $contentRepository */
-        $contentRepository = $joinPoint->getMethodArgument('contentRepository');
-        /** @var WorkspaceName $workspaceName */
-        $workspaceName = $joinPoint->getMethodArgument('workspaceName');
-        /** @var NodeAggregateId $nodeAggregateId */
-        $nodeAggregateId = $joinPoint->getMethodArgument('nodeAggregateId');
+        /** @var FlushWorkspaceRequest $flushWorkspaceRequest */
+        $flushWorkspaceRequest = $joinPoint->getMethodArgument('flushWorkspaceRequest');
+
+        /** @var CacheFlushingStrategy $cacheFlushingStrategy */
+        $cacheFlushingStrategy = $joinPoint->getMethodArgument('cacheFlushingStrategy');
 
         $cacheTags = [
             CacheTag::forEverything(null, null),
-            CacheTag::forEverything($contentRepository->id, $workspaceName),
-            CacheTag::forNodeAggregate($contentRepository->id, $workspaceName, $nodeAggregateId)
+            CacheTag::forEverything($flushWorkspaceRequest->contentRepositoryId, $flushWorkspaceRequest->workspaceName)
         ];
-        $ancestorNodeAggregates = $contentRepository->getContentGraph($workspaceName)->findParentNodeAggregates($nodeAggregateId);
+
+        $this->cache->clearByTags(new CacheTagSet(...$cacheTags));
+    }
+
+    #[Flow\Around('method(Neos\Neos\Fusion\Cache\ContentCacheFlusher->flushNodeAggregate())')]
+    public function flushNodeAggregate(JoinPointInterface $joinPoint): void
+    {
+        /** @var FlushNodeAggregateRequest $flushNodeAggregateRequest */
+        $flushNodeAggregateRequest = $joinPoint->getMethodArgument('flushNodeAggregateRequest');
+
+        /** @var CacheFlushingStrategy $cacheFlushingStrategy */
+        $cacheFlushingStrategy = $joinPoint->getMethodArgument('cacheFlushingStrategy');
+
+        $cacheTags = [
+            CacheTag::forEverything(null, null),
+            CacheTag::forEverything(
+                $flushNodeAggregateRequest->contentRepositoryId,
+                $flushNodeAggregateRequest->workspaceName
+            ),
+            CacheTag::forNodeAggregate(
+                $flushNodeAggregateRequest->contentRepositoryId,
+                $flushNodeAggregateRequest->workspaceName,
+                $flushNodeAggregateRequest->nodeAggregateId
+            )
+        ];
         $cacheTags = array_merge($cacheTags, array_map(
-            fn (NodeAggregate $ancestorAggregate): CacheTag => CacheTag::forNodeAggregate($contentRepository->id, $workspaceName, $ancestorAggregate->nodeAggregateId),
-            iterator_to_array($ancestorNodeAggregates),
+            fn (NodeAggregateId $ancestorAggregateId): CacheTag => CacheTag::forNodeAggregate(
+                $flushNodeAggregateRequest->contentRepositoryId,
+                $flushNodeAggregateRequest->workspaceName,
+                $ancestorAggregateId
+            ),
+            array_values(iterator_to_array($flushNodeAggregateRequest->ancestorNodeAggregateIds)),
         ));
 
-        $contentRepository = $this->contentRepositoryRegistry->get($contentRepository->id);
-        $nodeAggregate = $contentRepository->getContentGraph($workspaceName)->findNodeAggregateById($nodeAggregateId);
+        $contentRepository = $this->contentRepositoryRegistry->get($flushNodeAggregateRequest->contentRepositoryId);
+        $contentGraph = $contentRepository->getContentGraph($flushNodeAggregateRequest->workspaceName);
+        $nodeAggregate = $contentGraph->findNodeAggregateById($flushNodeAggregateRequest->nodeAggregateId);
         if ($nodeAggregate) {
             $nodeType = $contentRepository->getNodeTypeManager()->getNodeType($nodeAggregate->nodeTypeName);
             foreach (
@@ -61,7 +88,11 @@ readonly class ComponentCacheFlusher
                     ? $this->resolveAllSuperTypeNames($nodeType)
                     : [] as $nodeTypeName
             ) {
-                $cacheTags[] = CacheTag::forNodeTypeName($contentRepository->id, $workspaceName, $nodeTypeName);
+                $cacheTags[] = CacheTag::forNodeTypeName(
+                    $flushNodeAggregateRequest->contentRepositoryId,
+                    $flushNodeAggregateRequest->workspaceName,
+                    $nodeTypeName
+                );
             }
         }
 
