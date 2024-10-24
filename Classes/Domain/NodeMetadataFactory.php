@@ -9,9 +9,9 @@ declare(strict_types=1);
 namespace Nezaniel\ComponentView\Domain;
 
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeAddress;
 use Neos\Flow\Annotations as Flow;
 use Neos\Neos\Domain\Service\NodeTypeNameFactory;
-use Neos\Neos\FrontendRouting\NodeAddressFactory;
 use Neos\Neos\Service\ContentElementWrappingService;
 
 /**
@@ -31,10 +31,8 @@ final class NodeMetadataFactory extends ContentElementWrappingService
         $contentRepository = $this->contentRepositoryRegistry->get($contentNode->contentRepositoryId);
         $renderingEntryPoint ??= RenderingEntryPoint::forContentRendererDelegation();
 
-        $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromNode($contentNode);
-
         $attributes['data-__neos-fusion-path'] = $renderingEntryPoint->serializeForNeosUi($contentNode);
-        $attributes['data-__neos-node-contextpath'] = $nodeAddress->serializeForUri();
+        $attributes['data-__neos-node-contextpath'] = NodeAddress::fromNode($contentNode)->toJson();
         if (
             $contentRepository->getNodeTypeManager()->getNodeType($contentNode->nodeTypeName)
                 ?->isOfType(NodeTypeNameFactory::NAME_CONTENT_COLLECTION)
@@ -52,11 +50,10 @@ final class NodeMetadataFactory extends ContentElementWrappingService
      */
     public function forDocumentNode(Node $documentNode, ?string $locator = null, ?Node $siteNode = null): ?array
     {
-        $contentRepository = $this->contentRepositoryRegistry->get($documentNode->contentRepositoryId);
         $locator = is_string($locator) ? $locator : '/<Neos.Neos:Document>/' . $documentNode->aggregateId->value;
 
-        $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromNode($documentNode);
-        $metadata['data-__neos-node-contextpath'] = $nodeAddress->serializeForUri();
+        $nodeAddress = NodeAddress::fromNode($documentNode);
+        $metadata['data-__neos-node-contextpath'] = $nodeAddress->toJson();
         $metadata['data-__neos-fusion-path'] = $locator;
 
         return $metadata;

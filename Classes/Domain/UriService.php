@@ -27,8 +27,6 @@ use Neos\Media\Domain\Model\AssetInterface;
 use Neos\Media\Domain\Repository\AssetRepository;
 use Neos\Flow\Mvc;
 use Neos\Flow\Core\Bootstrap;
-use Neos\Neos\FrontendRouting\NodeAddress as LegacyNodeAddress;
-use Neos\Neos\FrontendRouting\NodeAddressFactory;
 use Neos\Neos\FrontendRouting\NodeUriBuilderFactory;
 use Neos\Neos\FrontendRouting\Options;
 use Psr\Http\Message\UriInterface;
@@ -87,20 +85,11 @@ final class UriService
         $uriBuilder->setCreateAbsoluteUri($absolute);
         $uriBuilder->setFormat($format ?: $this->controllerContext->getUriBuilder()->getFormat());
 
-        $nodeAddressFactory = NodeAddressFactory::create($this->contentRepositoryRegistry->get($documentNode->contentRepositoryId));
-        $nodeAddress = $nodeAddressFactory->createFromNode($documentNode);
-        $nodeAddress = new LegacyNodeAddress(
-            null,
-            $nodeAddress->dimensionSpacePoint,
-            $nodeAddress->nodeAggregateId,
-            $workspaceName
-        );
-
         return new Uri(
             $uriBuilder->uriFor(
                 'index',
                 [
-                    'node' => $nodeAddress->serializeForUri(),
+                    'node' => NodeAddress::fromNode($documentNode)->toJson()
                 ],
                 'Backend',
                 'Neos.Neos.Ui',
