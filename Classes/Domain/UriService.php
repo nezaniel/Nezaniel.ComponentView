@@ -31,6 +31,8 @@ use Neos\Neos\FrontendRouting\NodeAddress as LegacyNodeAddress;
 use Neos\Neos\FrontendRouting\NodeAddressFactory;
 use Neos\Neos\FrontendRouting\NodeUriBuilderFactory;
 use Neos\Neos\FrontendRouting\Options;
+use Nezaniel\ComponentView\Application\CacheTag;
+use Nezaniel\ComponentView\Application\CacheTagSet;
 use Psr\Http\Message\UriInterface;
 
 /**
@@ -144,17 +146,23 @@ final class UriService
         return $this->controllerContext;
     }
 
-    public function resolveLinkUri(string $rawLinkUri, ContentSubgraphInterface $subgraph): UriInterface
+    public function resolveLinkUri(string $rawLinkUri, ContentSubgraphInterface $subgraph, ?CacheTagSet &$cacheTags): UriInterface
     {
         if (\mb_substr($rawLinkUri, 0, 7) === 'node://') {
             $nodeIdentifier = \mb_substr($rawLinkUri, 7);
             $node = $subgraph->findNodeById(NodeAggregateId::fromString($nodeIdentifier));
-            $linkUri = $node ? $this->getNodeUri($node) : new Uri('#');
+            $linkUri = $node ? $this->getNodeUri($node, true) : new Uri('#');
+            if ($node) {
+                $cacheTags = $cacheTags->add(CacheTag::forNodeAggregateFromNode($node));
+            }
         } elseif (\mb_substr($rawLinkUri, 0, 8) === 'asset://') {
             $assetIdentifier = \mb_substr($rawLinkUri, 8);
             /** @var ?AssetInterface $asset */
             $asset = $this->assetRepository->findByIdentifier($assetIdentifier);
             $linkUri = $asset ? $this->getAssetUri($asset) : new Uri('#');
+            if ($asset) {
+                $cacheTags = $cacheTags->add(CacheTag::forAsset($asset->getIdentifier()));
+            }
         } elseif (\str_starts_with($rawLinkUri, 'https://') || \str_starts_with($rawLinkUri, 'http://')) {
             $linkUri = new Uri($rawLinkUri);
         } else {
