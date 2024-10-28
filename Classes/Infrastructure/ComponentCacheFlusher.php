@@ -48,7 +48,7 @@ readonly class ComponentCacheFlusher
         ];
         $ancestorNodeAggregates = $contentRepository->getContentGraph($workspaceName)->findParentNodeAggregates($nodeAggregateId);
         $cacheTags = array_merge($cacheTags, array_map(
-            fn (NodeAggregate $ancestorAggregate): CacheTag => CacheTag::forNodeAggregate($contentRepository->id, $workspaceName, $ancestorAggregate->nodeAggregateId),
+            fn (NodeAggregate $ancestorAggregate): CacheTag => CacheTag::forAncestorNode($contentRepository->id, $workspaceName, $ancestorAggregate->nodeAggregateId),
             iterator_to_array($ancestorNodeAggregates),
         ));
 
