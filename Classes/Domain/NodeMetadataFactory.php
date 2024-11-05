@@ -1,18 +1,15 @@
 <?php
 
-/*
- * This file is part of the Nezaniel.ComponentView package.
- */
-
 declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Domain;
 
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeAddress;
 use Neos\Flow\Annotations as Flow;
 use Neos\Neos\Domain\Service\NodeTypeNameFactory;
-use Neos\Neos\FrontendRouting\NodeAddressFactory;
 use Neos\Neos\Service\ContentElementWrappingService;
+use Neos\Neos\Ui\Fusion\Helper\NodeInfoHelper;
 
 /**
  * The domain service to create node metadata
@@ -20,6 +17,9 @@ use Neos\Neos\Service\ContentElementWrappingService;
 #[Flow\Scope('singleton')]
 final class NodeMetadataFactory extends ContentElementWrappingService
 {
+    #[Flow\Inject]
+    protected NodeInfoHelper $nodeInfoHelper;
+
     /**
      * @return array<string,mixed>|null
      */
@@ -31,10 +31,10 @@ final class NodeMetadataFactory extends ContentElementWrappingService
         $contentRepository = $this->contentRepositoryRegistry->get($contentNode->contentRepositoryId);
         $renderingEntryPoint ??= RenderingEntryPoint::forContentRendererDelegation();
 
-        $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromNode($contentNode);
+        $nodeAddress = NodeAddress::fromNode($contentNode);
 
         $attributes['data-__neos-fusion-path'] = $renderingEntryPoint->serializeForNeosUi($contentNode);
-        $attributes['data-__neos-node-contextpath'] = $nodeAddress->serializeForUri();
+        $attributes['data-__neos-node-contextpath'] = $nodeAddress->toJson();
         if (
             $contentRepository->getNodeTypeManager()->getNodeType($contentNode->nodeTypeName)
                 ?->isOfType(NodeTypeNameFactory::NAME_CONTENT_COLLECTION)
@@ -49,13 +49,12 @@ final class NodeMetadataFactory extends ContentElementWrappingService
 
     public function getScriptForContentNode(Node $contentNode): string
     {
-        $contentRepository = $this->contentRepositoryRegistry->get($contentNode->contentRepositoryId);
-        $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromNode($contentNode);
+        $nodeAddress = NodeAddress::fromNode($contentNode);
 
         // TODO illegal dependency on ui
         $serializedNode = json_encode($this->nodeInfoHelper->renderNodeWithPropertiesAndChildrenInformation($contentNode));
 
-        return "<script data-neos-nodedata>(function(){(this['@Neos.Neos.Ui:Nodes'] = this['@Neos.Neos.Ui:Nodes'] || {})['{$nodeAddress->serializeForUri()}'] = {$serializedNode}})()</script>";
+        return "<script data-neos-nodedata>(function(){(this['@Neos.Neos.Ui:Nodes'] = this['@Neos.Neos.Ui:Nodes'] || {})['{$nodeAddress->toJson()}'] = {$serializedNode}})()</script>";
     }
 
     /**
@@ -63,13 +62,11 @@ final class NodeMetadataFactory extends ContentElementWrappingService
      */
     public function forDocumentNode(Node $documentNode, ?string $locator = null, ?Node $siteNode = null): ?array
     {
-        $contentRepository = $this->contentRepositoryRegistry->get($documentNode->contentRepositoryId);
         $locator = is_string($locator) ? $locator : '/<Neos.Neos:Document>/' . $documentNode->aggregateId->value;
 
-        $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromNode($documentNode);
-        $metadata['data-__neos-node-contextpath'] = $nodeAddress->serializeForUri();
+        $nodeAddress = NodeAddress::fromNode($documentNode);
+        $metadata['data-__neos-node-contextpath'] = $nodeAddress->toJson();
         $metadata['data-__neos-fusion-path'] = $locator;
-        $metadata = $this->addCssClasses($metadata, $documentNode);
 
         return $metadata;
     }

@@ -1,11 +1,5 @@
 <?php
 
-/*
- * This file is part of the Nezaniel.ComponentView package
- * and taken over from PackageFactory.AtomicFusion.PresentationObjects.
- * @see https://github.com/PackageFactory/atomic-fusion-presentationobjects
- */
-
 declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Domain;
@@ -23,12 +17,11 @@ use Neos\Flow\Mvc\Controller\ControllerContext;
 use Neos\Flow\ResourceManagement\PersistentResource;
 use Neos\Flow\ResourceManagement\ResourceManager;
 use Neos\Flow\Http;
+use Neos\Media\Domain\Model\Asset;
 use Neos\Media\Domain\Model\AssetInterface;
 use Neos\Media\Domain\Repository\AssetRepository;
 use Neos\Flow\Mvc;
 use Neos\Flow\Core\Bootstrap;
-use Neos\Neos\FrontendRouting\NodeAddress as LegacyNodeAddress;
-use Neos\Neos\FrontendRouting\NodeAddressFactory;
 use Neos\Neos\FrontendRouting\NodeUriBuilderFactory;
 use Neos\Neos\FrontendRouting\Options;
 use Nezaniel\ComponentView\Application\CacheTag;
@@ -76,27 +69,33 @@ final class UriService
             ->uriFor(NodeAddress::fromNode($documentNode), $options);
     }
 
-    public function getBackendNodeUri(Node $documentNode, WorkspaceName $workspaceName, bool $absolute = false, ?string $format = null): UriInterface
-    {
+    public function getBackendNodeUri(
+        Node $documentNode,
+        ?WorkspaceName $workspaceName = null,
+        bool $absolute = false,
+        ?string $format = null
+    ): UriInterface {
+        assert($this->controllerContext instanceof ControllerContext);
         $uriBuilder = clone $this->controllerContext->getUriBuilder();
         $uriBuilder->reset();
         $uriBuilder->setCreateAbsoluteUri($absolute);
         $uriBuilder->setFormat($format ?: $this->controllerContext->getUriBuilder()->getFormat());
 
-        $nodeAddressFactory = NodeAddressFactory::create($this->contentRepositoryRegistry->get($documentNode->contentRepositoryId));
-        $nodeAddress = $nodeAddressFactory->createFromNode($documentNode);
-        $nodeAddress = new LegacyNodeAddress(
-            null,
-            $nodeAddress->dimensionSpacePoint,
-            $nodeAddress->nodeAggregateId,
-            $workspaceName
-        );
+        $nodeAddress = NodeAddress::fromNode($documentNode);
+        if ($workspaceName) {
+            $nodeAddress = NodeAddress::create(
+                $nodeAddress->contentRepositoryId,
+                $workspaceName,
+                $nodeAddress->dimensionSpacePoint,
+                $nodeAddress->aggregateId
+            );
+        }
 
         return new Uri(
             $uriBuilder->uriFor(
                 'index',
                 [
-                    'node' => $nodeAddress->serializeForUri(),
+                    'node' => $nodeAddress->toJson(),
                 ],
                 'Backend',
                 'Neos.Neos.Ui',
@@ -152,15 +151,15 @@ final class UriService
             $nodeIdentifier = \mb_substr($rawLinkUri, 7);
             $node = $subgraph->findNodeById(NodeAggregateId::fromString($nodeIdentifier));
             $linkUri = $node ? $this->getNodeUri($node, true) : new Uri('#');
-            if ($node) {
+            if ($node && $cacheTags) {
                 $cacheTags = $cacheTags->add(CacheTag::forNodeAggregateFromNode($node));
             }
         } elseif (\mb_substr($rawLinkUri, 0, 8) === 'asset://') {
             $assetIdentifier = \mb_substr($rawLinkUri, 8);
-            /** @var ?AssetInterface $asset */
+            /** @var ?Asset $asset */
             $asset = $this->assetRepository->findByIdentifier($assetIdentifier);
             $linkUri = $asset ? $this->getAssetUri($asset) : new Uri('#');
-            if ($asset) {
+            if ($asset && $cacheTags) {
                 $cacheTags = $cacheTags->add(CacheTag::forAsset($asset->getIdentifier()));
             }
         } elseif (\str_starts_with($rawLinkUri, 'https://') || \str_starts_with($rawLinkUri, 'http://')) {
