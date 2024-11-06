@@ -39,6 +39,17 @@ class CacheTag
         );
     }
 
+    final public static function forWorkspace(
+        ContentRepositoryId $contentRepositoryId,
+        WorkspaceName $workspaceName,
+    ): self {
+        return new self(
+            'Workspace'
+            . self::renderContentRepositoryPrefix($contentRepositoryId)
+            . self::renderWorkspacePrefix($workspaceName)
+        );
+    }
+
     final public static function forNodeAggregate(
         ContentRepositoryId $contentRepositoryId,
         ?WorkspaceName $workspaceName,

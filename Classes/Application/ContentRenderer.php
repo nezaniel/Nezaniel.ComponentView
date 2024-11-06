@@ -80,7 +80,12 @@ final class ContentRenderer extends AbstractComponentFactory
             assert($contentCollection instanceof Node);
             $cacheTags = new CacheTagSet(
                 CacheTag::forAncestorNodeFromNode($contentCollection),
-                CacheTag::forNodeAggregateFromNode($contentCollection)
+                CacheTag::forNodeAggregateFromNode($contentCollection),
+                CacheTag::forWorkspace(
+                    $runtimeVariables->subgraph->getContentRepositoryId(),
+                    $runtimeVariables->subgraph->getWorkspaceName()
+                ),
+                CacheTag::forEverything(null, null),
             );
             $content = new ComponentCollection(... array_map(
                 // We can't use an arrow function here because we need to modify $cacheTags
