@@ -23,6 +23,7 @@ use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryI
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeName;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
+use Neos\Neos\Domain\SubtreeTagging\NeosVisibilityConstraints;
 
 final class TestingSubgraph implements ContentSubgraphInterface
 {
@@ -173,6 +174,6 @@ final class TestingSubgraph implements ContentSubgraphInterface
 
     public function getVisibilityConstraints(): VisibilityConstraints
     {
-        return VisibilityConstraints::withoutRestrictions();
+        return NeosVisibilityConstraints::excludeRemoved();
     }
 }
