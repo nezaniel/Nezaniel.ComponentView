@@ -21,6 +21,7 @@ use Neos\ContentRepository\Core\Projection\ContentGraph\Subtree;
 use Neos\ContentRepository\Core\Projection\ContentGraph\VisibilityConstraints;
 use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateIds;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeName;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\Neos\Domain\SubtreeTagging\NeosVisibilityConstraints;
@@ -175,5 +176,10 @@ final class TestingSubgraph implements ContentSubgraphInterface
     public function getVisibilityConstraints(): VisibilityConstraints
     {
         return NeosVisibilityConstraints::excludeRemoved();
+    }
+
+    public function findNodesByIds(NodeAggregateIds $nodeAggregateIds): Nodes
+    {
+        return Nodes::createEmpty();
     }
 }

@@ -30,11 +30,11 @@ final readonly class ComponentViewRuntimeVariables
     }
 
     public function with(
-        Node $siteNode = null,
-        Node $documentNode = null,
-        ContentSubgraphInterface $subgraph = null,
-        ActionRequest $request = null,
-        RenderingMode $renderingMode = null,
+        ?Node $siteNode = null,
+        ?Node $documentNode = null,
+        ?ContentSubgraphInterface $subgraph = null,
+        ?ActionRequest $request = null,
+        ?RenderingMode $renderingMode = null,
     ): self {
         return new self(
             $siteNode ?: $this->siteNode,
