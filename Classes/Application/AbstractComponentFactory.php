@@ -35,11 +35,15 @@ abstract class AbstractComponentFactory
 
     final protected function getEditableProperty(Node $node, string $propertyName, bool $block = false): string
     {
+        $value = $node->getProperty($propertyName);
+        if ($value !== null && !is_string($value)) {
+            throw new \InvalidArgumentException(sprintf('Cannot make non-string node property "%s" of type "%s" editable.', $propertyName, get_debug_type($value)));
+        }
         return $this->contentElementEditableService->wrapContentProperty(
             $node,
             $propertyName,
             ($block ? '<div>' : '')
-            . ($node->getProperty($propertyName) ?: '')
+            . ($value ?? '')
             . ($block ? '</div>' : '')
         );
     }
