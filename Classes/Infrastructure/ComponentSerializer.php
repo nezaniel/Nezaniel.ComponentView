@@ -28,6 +28,7 @@ class ComponentSerializer
     {
         $reflectionClass = new \ReflectionClass($component);
         if ($component instanceof ComponentCollection) {
+            /** @var \ReflectionClass<ComponentCollection> $reflectionClass */
             return self::serializeComponentCollection($component, $reflectionClass);
         } elseif ($component instanceof CacheSegment) {
             return $component->serializeForCache();
@@ -70,6 +71,7 @@ class ComponentSerializer
     }
 
     /**
+     * @param \ReflectionClass<ComponentCollection> $reflectionClass
      * @return array<string,mixed>
      */
     private static function serializeComponentCollection(
@@ -90,6 +92,7 @@ class ComponentSerializer
     }
 
     /**
+     * @param \ReflectionClass<ComponentInterface> $reflectionClass
      * @return array<string,mixed>
      */
     private static function serializeCollectionType(

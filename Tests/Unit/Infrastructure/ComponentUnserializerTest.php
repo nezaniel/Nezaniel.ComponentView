@@ -58,12 +58,8 @@ final class ComponentUnserializerTest extends TestCase
 
     private ComponentCache $cache;
 
-    /**
-     * @param array<mixed> $data
-     */
-    public function __construct(?string $name = null, array $data = [], $dataName = '')
+    public function setUp(): void
     {
-        parent::__construct($name, $data, $dataName);
         $this->subject = new ComponentUnserializer();
         $this->subgraph = new TestingSubgraph();
         $this->dummyNode = Node::create(

@@ -47,7 +47,7 @@ class ComponentUnserializer
         if (!is_string($className)) {
             throw new \InvalidArgumentException('Class identifiers must be strings', 1659564301);
         }
-        /** @var class-string $className */
+        /** @var class-string<ComponentInterface> $className */
         if (!in_array(ComponentInterface::class, class_implements($className) ?: [])) {
             throw new \InvalidArgumentException(
                 'Can only unserialize objects of type ' . ComponentInterface::class . ', ' . $className . ' given',

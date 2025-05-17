@@ -32,12 +32,8 @@ final class ComponentSerializerTest extends TestCase
 {
     private ComponentSerializer $subject;
 
-    /**
-     * @param array<mixed> $data
-     */
-    public function __construct(?string $name = null, array $data = [], $dataName = '')
+    public function setUp(): void
     {
-        parent::__construct($name, $data, $dataName);
         $this->subject = new ComponentSerializer();
     }
 
