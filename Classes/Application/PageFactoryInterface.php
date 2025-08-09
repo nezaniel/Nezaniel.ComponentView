@@ -1,17 +1,10 @@
 <?php
 
-/*
- * This file is part of the Nezaniel.ComponentView package.
- */
-
 declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
-use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
-use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
-use Neos\Flow\Mvc\ActionRequest;
-use Nezaniel\ComponentView\Domain\ComponentInterface;
+use PackageFactory\Neos\ComponentEngine\ComponentInterface;
 
 /**
  * The interface to be implemented by page factories

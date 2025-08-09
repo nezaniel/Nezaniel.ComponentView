@@ -9,12 +9,16 @@ declare(strict_types=1);
 namespace Nezaniel\ComponentView\Domain;
 
 use Neos\Flow\Annotations as Flow;
+use PackageFactory\Neos\ComponentEngine\ComponentCollectionInterface;
+use PackageFactory\Neos\ComponentEngine\ComponentInterface;
 
 /**
+ * @template T of ComponentInterface
  * A cache segment defined by its cache directive and optional rendered content
+ * @implements ComponentCollectionInterface<T>
  */
 #[Flow\Proxy(false)]
-final readonly class CacheSegment implements ComponentInterface, ComponentContainerInterface
+final readonly class CacheSegment implements ComponentInterface, ComponentContainerInterface, ComponentCollectionInterface, \Nezaniel\ComponentView\Domain\ComponentInterface
 {
     public function __construct(
         public CacheDirective $cacheDirective,

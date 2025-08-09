@@ -132,7 +132,7 @@ final class ContentRenderer extends AbstractComponentFactory
         Node $contentNode,
         ComponentViewRuntimeVariables $runtimeVariables,
         CacheTagSet &$cacheTags
-    ): ComponentInterface {
+    ): ComponentInterface|\PackageFactory\Neos\ComponentEngine\ComponentInterface {
         $contentComponentFactory = $this->resolveContentComponentFactory($contentNode);
         $component = $contentComponentFactory->forContentNode(
             $contentNode,
