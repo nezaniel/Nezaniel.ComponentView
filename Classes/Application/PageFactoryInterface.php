@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
-use PackageFactory\Neos\ComponentEngine\ComponentInterface;
+use PackageFactory\PHPComponentEngine\ComponentInterface;
 
 /**
  * The interface to be implemented by page factories

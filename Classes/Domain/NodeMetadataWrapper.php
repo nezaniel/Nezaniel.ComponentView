@@ -13,7 +13,7 @@ use Neos\Fusion\Service\HtmlAugmenter;
 /**
  * A component for wrapping node metadata around a component
  */
-final readonly class NodeMetadataWrapper extends AbstractComponent implements \PackageFactory\Neos\ComponentEngine\ComponentInterface
+final readonly class NodeMetadataWrapper extends AbstractComponent implements \PackageFactory\PHPComponentEngine\ComponentInterface
 {
     /**
      * @param array<string,mixed> $attributes

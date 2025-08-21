@@ -19,14 +19,14 @@ use Neos\Flow\Annotations as Flow;
 final readonly class ComponentCollection extends AbstractComponent implements
     ComponentContainerInterface,
     \IteratorAggregate,
-    \PackageFactory\Neos\ComponentEngine\ComponentInterface
+    \PackageFactory\PHPComponentEngine\ComponentInterface
 {
     /**
      * @var array<ComponentInterface|string>
      */
     private array $components;
 
-    public function __construct(ComponentInterface|\PackageFactory\Neos\ComponentEngine\ComponentInterface|string ...$components)
+    public function __construct(ComponentInterface|\PackageFactory\PHPComponentEngine\ComponentInterface|string ...$components)
     {
         $this->components = $components;
     }

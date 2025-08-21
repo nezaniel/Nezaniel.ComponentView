@@ -11,7 +11,7 @@ namespace Nezaniel\ComponentView\Domain;
 /**
  * The interface for self-rendering components
  */
-interface ComponentInterface extends \Stringable, \PackageFactory\Neos\ComponentEngine\ComponentInterface
+interface ComponentInterface extends \Stringable, \PackageFactory\PHPComponentEngine\ComponentInterface
 {
     public function render(): string;
 }

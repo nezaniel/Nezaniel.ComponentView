@@ -145,6 +145,9 @@ final class UriService
         return $this->controllerContext;
     }
 
+    /**
+     * @param-out ($cacheTags is null ? null : CacheTagSet) $cacheTags
+     */
     public function resolveLinkUri(string $rawLinkUri, ContentSubgraphInterface $subgraph, ?CacheTagSet &$cacheTags): UriInterface
     {
         if (\mb_substr($rawLinkUri, 0, 7) === 'node://') {

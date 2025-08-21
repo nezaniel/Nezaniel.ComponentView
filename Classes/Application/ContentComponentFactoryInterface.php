@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Nezaniel\ComponentView\Application;
 
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
-use PackageFactory\Neos\ComponentEngine\ComponentInterface;
+use PackageFactory\PHPComponentEngine\ComponentInterface;
 
 /**
  * The interface to be implemented by content component factories
