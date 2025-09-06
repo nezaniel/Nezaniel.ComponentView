@@ -26,7 +26,7 @@ final readonly class ComponentCollection extends AbstractComponent implements
      */
     private array $components;
 
-    public function __construct(ComponentInterface|\PackageFactory\PHPComponentEngine\ComponentInterface|string ...$components)
+    public function __construct(ComponentInterface|string ...$components)
     {
         $this->components = $components;
     }

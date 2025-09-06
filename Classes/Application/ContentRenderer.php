@@ -132,7 +132,7 @@ final class ContentRenderer extends AbstractComponentFactory
         Node $contentNode,
         ComponentViewRuntimeVariables $runtimeVariables,
         CacheTagSet &$cacheTags
-    ): ComponentInterface|\PackageFactory\PHPComponentEngine\ComponentInterface {
+    ): ComponentInterface {
         $contentComponentFactory = $this->resolveContentComponentFactory($contentNode);
         $component = $contentComponentFactory->forContentNode(
             $contentNode,
