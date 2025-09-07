@@ -18,7 +18,7 @@ use PackageFactory\PHPComponentEngine\ComponentInterface;
  * @implements ComponentCollectionInterface<T>
  */
 #[Flow\Proxy(false)]
-final readonly class CacheSegment implements ComponentInterface, ComponentContainerInterface
+final readonly class CacheSegment implements ComponentInterface, ComponentContainerInterface, ComponentCollectionInterface
 {
     public function __construct(
         public CacheDirective $cacheDirective,
