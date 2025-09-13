@@ -14,6 +14,7 @@ use Neos\Flow\Annotations as Flow;
  * A collection of self rendering components
  *
  * @implements \IteratorAggregate<ComponentInterface|string>
+ * @deprecated use \PackageFactory\PHPComponentEngine\ComponentCollection instead
  */
 #[Flow\Proxy(false)]
 final readonly class ComponentCollection extends AbstractComponent implements

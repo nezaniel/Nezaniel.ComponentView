@@ -12,6 +12,7 @@ use Neos\Fusion\Service\HtmlAugmenter;
 
 /**
  * A component for wrapping node metadata around a component
+ * @deprecated obsolete with the Neos ComponentEngine
  */
 final readonly class NodeMetadataWrapper extends AbstractComponent implements \PackageFactory\PHPComponentEngine\ComponentInterface
 {

@@ -1,18 +1,14 @@
 <?php
 
-/*
- * This file is part of the Nezaniel.ComponentView package.
- */
-
 declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\Flow\Annotations as Flow;
-use Nezaniel\ComponentView\Domain\ComponentInterface;
 use Nezaniel\ComponentView\Domain\NodeMetadataFactory;
 use Nezaniel\ComponentView\Domain\NodeMetadataWrapper;
+use PackageFactory\PHPComponentEngine\ComponentInterface;
 
 /**
  * The factory application service for creating node metadata wrapper components
