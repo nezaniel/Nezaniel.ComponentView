@@ -12,10 +12,10 @@ use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindChildNodesFil
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeName;
 use Neos\Flow\Annotations as Flow;
-use Nezaniel\ComponentView\Domain\ComponentInterface;
 use Nezaniel\ComponentView\Domain\CacheDirective;
 use Nezaniel\ComponentView\Domain\CacheSegment;
 use Nezaniel\ComponentView\Domain\ComponentCollection;
+use PackageFactory\PHPComponentEngine\ComponentInterface;
 
 /**
  * The content renderer application service
