@@ -13,7 +13,7 @@ use Neos\Flow\Annotations as Flow;
 /**
  * A collection of self rendering components
  *
- * @implements \IteratorAggregate<ComponentInterface|string>
+ * @implements \IteratorAggregate<\PackageFactory\PHPComponentEngine\ComponentInterface|string>
  * @deprecated use \PackageFactory\PHPComponentEngine\ComponentCollection instead
  */
 #[Flow\Proxy(false)]
@@ -23,11 +23,11 @@ final readonly class ComponentCollection extends AbstractComponent implements
     \PackageFactory\PHPComponentEngine\ComponentInterface
 {
     /**
-     * @var array<ComponentInterface|string>
+     * @var array<\PackageFactory\PHPComponentEngine\ComponentInterface|string>
      */
     private array $components;
 
-    public function __construct(ComponentInterface|string ...$components)
+    public function __construct(\PackageFactory\PHPComponentEngine\ComponentInterface|string ...$components)
     {
         $this->components = $components;
     }
@@ -48,7 +48,7 @@ final readonly class ComponentCollection extends AbstractComponent implements
     }
 
     /**
-     * @return \Traversable<ComponentInterface|string>
+     * @return \Traversable<\PackageFactory\PHPComponentEngine\ComponentInterface|string>
      */
     public function getIterator(): \Traversable
     {

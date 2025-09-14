@@ -1,15 +1,11 @@
 <?php
 
-/*
- * This file is part of the Nezaniel.ComponentView package.
- */
-
 declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
 
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
-use Nezaniel\ComponentView\Domain\ComponentInterface;
+use PackageFactory\PHPComponentEngine\ComponentInterface;
 
 /**
  * The page factory relay application service

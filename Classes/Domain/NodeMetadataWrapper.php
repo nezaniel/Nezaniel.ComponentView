@@ -21,7 +21,7 @@ final readonly class NodeMetadataWrapper extends AbstractComponent implements \P
      */
     public function __construct(
         private ?array $attributes,
-        private ComponentInterface|string $content,
+        private \PackageFactory\PHPComponentEngine\ComponentInterface|string $content,
         private ?string $script
     ) {
     }

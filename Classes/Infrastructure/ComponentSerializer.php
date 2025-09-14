@@ -12,7 +12,7 @@ use GuzzleHttp\Psr7\Uri;
 use Neos\Flow\Annotations as Flow;
 use Nezaniel\ComponentView\Domain\CacheSegment;
 use Nezaniel\ComponentView\Domain\ComponentCollection;
-use Nezaniel\ComponentView\Domain\ComponentInterface;
+use PackageFactory\PHPComponentEngine\ComponentInterface;
 use Psr\Http\Message\UriInterface;
 
 /**

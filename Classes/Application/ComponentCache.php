@@ -1,9 +1,5 @@
 <?php
 
-/*
- * This file is part of the Nezaniel.ComponentView package.
- */
-
 declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Application;
@@ -14,7 +10,7 @@ use Neos\Cache\Psr\InvalidArgumentException;
 use Neos\Flow\Annotations as Flow;
 use Nezaniel\ComponentView\Infrastructure\ComponentSerializer;
 use Nezaniel\ComponentView\Infrastructure\ComponentUnserializer;
-use Nezaniel\ComponentView\Domain\ComponentInterface;
+use PackageFactory\PHPComponentEngine\ComponentInterface;
 use Psr\SimpleCache\CacheInterface;
 
 /**

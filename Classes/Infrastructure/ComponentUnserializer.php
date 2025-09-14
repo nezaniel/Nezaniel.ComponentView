@@ -1,9 +1,5 @@
 <?php
 
-/*
- * This file is part of the Nezaniel.ComponentView package.
- */
-
 declare(strict_types=1);
 
 namespace Nezaniel\ComponentView\Infrastructure;
@@ -20,9 +16,9 @@ use Nezaniel\ComponentView\Application\ComponentViewRuntimeVariables;
 use Nezaniel\ComponentView\Domain\CacheDirective;
 use Nezaniel\ComponentView\Domain\CacheSegment;
 use Nezaniel\ComponentView\Domain\ComponentCollection;
-use Nezaniel\ComponentView\Domain\ComponentInterface;
 use Nezaniel\ComponentView\Application\ContentRenderer;
 use Nezaniel\ComponentView\Domain\RenderingEntryPoint;
+use PackageFactory\PHPComponentEngine\ComponentInterface;
 use Psr\Http\Message\UriInterface;
 
 /**
