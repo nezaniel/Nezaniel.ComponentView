@@ -35,7 +35,7 @@ final class NeosStuffFactory extends AbstractComponentFactory
             'metaData' => [
                 'documentNode' => $this->nodeInfoHelper->serializedNodeAddress($runtimeVariables->documentNode),
                 'siteNode' => $this->nodeInfoHelper->serializedNodeAddress($runtimeVariables->siteNode),
-                'previewUrl' => $this->nodeInfoHelper->createRedirectToNode(
+                'previewUrl' => $this->nodeInfoHelper->previewUri(
                     $runtimeVariables->documentNode,
                     $this->uriService->getControllerContext()->getRequest()
                 ),
