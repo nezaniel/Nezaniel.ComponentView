@@ -21,13 +21,13 @@ final class NodeMetadataFactory extends ContentElementWrappingService
     protected NodeInfoHelper $nodeInfoHelper;
 
     /**
-     * @return array<string,mixed>|null
+     * @return array<string,mixed>
      */
     public function getAugmenterAttributesForContentNode(
         Node $contentNode,
         ?RenderingEntryPoint $renderingEntryPoint = null,
         ?string $additionalClasses = null
-    ): ?array {
+    ): array {
         $contentRepository = $this->contentRepositoryRegistry->get($contentNode->contentRepositoryId);
         $renderingEntryPoint ??= RenderingEntryPoint::forContentRendererDelegation();
 
@@ -60,7 +60,7 @@ final class NodeMetadataFactory extends ContentElementWrappingService
     /**
      * @return array<string,mixed>
      */
-    public function forDocumentNode(Node $documentNode, ?string $locator = null, ?Node $siteNode = null): ?array
+    public function forDocumentNode(Node $documentNode, ?string $locator = null, ?Node $siteNode = null): array
     {
         $locator = is_string($locator) ? $locator : '/<Neos.Neos:Document>/' . $documentNode->aggregateId->value;
 

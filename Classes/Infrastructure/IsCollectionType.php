@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Nezaniel\ComponentView\Infrastructure;
 
 use Neos\Flow\Annotations as Flow;
+use Nezaniel\ComponentView\Domain\ComponentInterface;
 
 /**
  * The specification to determine whether a component class is a collection type
@@ -16,6 +17,9 @@ use Neos\Flow\Annotations as Flow;
 #[Flow\Proxy(false)]
 final class IsCollectionType
 {
+    /**
+     * @param \ReflectionClass<ComponentInterface> $reflectionClass
+     */
     public static function isSatisfiedByReflectionClass(\ReflectionClass $reflectionClass): bool
     {
         $reflectionProperties = $reflectionClass->getProperties();
